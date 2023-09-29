@@ -6,9 +6,13 @@
 from flask import request
 from flask_restful import Resource
 
+
 # Local imports
 from config import app, db, api
+
+
 # Add your model imports
+from models import User, Festival, Artist, Song, User_Festival, Lineup, Favorite
 
 
 # Views go here!
