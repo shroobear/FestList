@@ -41,7 +41,7 @@ jspm_packages
 /db/*.sqlite3-journal
 
 # ignore testing data
-/server/*.db
+/server/instance/*.db
 
 # Ignore all logfiles and tempfiles.
 /log/*
