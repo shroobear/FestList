@@ -56,3 +56,5 @@ jspm_packages
 
 __pycache__
 
+#Environment variables and secret keys
+/server/.env
