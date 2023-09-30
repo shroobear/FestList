@@ -5,7 +5,7 @@
 # Remote library imports
 from flask import Flask, request, url_for, redirect, session
 from flask_restful import Resource
-
+from flask_bcrypt import bcrypt
 
 # Local imports
 from config import app, db, api, oauth
@@ -17,16 +17,54 @@ from models import User, Festival, Artist, Song, User_Festival, Lineup, Favorite
 
 # Views go here!
 
-@app.route('/')
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        email = request.form.get('email')
 
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        new_user = User(
+            username=username, 
+            password_hash=hashed_password, 
+            first_name=first_name, 
+            last_name=last_name,
+            email=email
+        )
+        db.session.add(new_user)
+        db.session.commit()
+
+        return redirect(url_for('index'))
+    return 'Signup Page'
+
+@app.route('/festlist_login', methods=['GET', 'POST'])
+def festlist_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        user = User.query.filter_by(username=username).first()
+
+        if user and bcrypt.checkpw(password.encode('utf-8'), user.password_hash):
+            session['user_id'] = user.id
+            return redirect(url_for('index'))
+        else:
+            return 'Invalid login credentials', 401
+    return 'FestList Login Page'
+
+@app.route('/')
 def index():
     print('running index')
     email = dict(session).get('email', None)
     name = dict(session).get('display_name')
     return f'FestList Home Page. Hello, {name}'
 
-@app.route('/login')
-def login():
+@app.route('/spotify_login')
+def spotify_login():
     print('running login')
     spotify = oauth.create_client('spotify')
     redirect_uri = url_for('authorize', _external=True)
@@ -36,20 +74,6 @@ def login():
 @app.route('/redirect')
 def redirect_page():
     return 'redirect'
-
-# @app.route('/authorize')
-# def authorize():
-#     # import ipdb; ipdb.set_trace()
-#     print('running authorize')
-#     spotify = oauth.create_client('spotify')
-#     token = spotify.authorize_access_token()
-#     print(token)
-#     resp = spotify.get('userinfo', token=token)
-#     user_info = resp.json()
-#     print('user Info::::::', user_info)
-#     # user = oauth.spotify.userinfo()
-#     # session['email'] = user_info['email']
-#     return redirect('/')
 
 @app.route('/authorize')
 def authorize():
@@ -65,7 +89,7 @@ def authorize():
             # Storing user info in session
             session['email'] = user_info.get('email')
             session['display_name'] = user_info.get('display_name')
-            session['id'] = user_info.get('id')
+            session['spotify_id'] = user_info.get('id')
 
             
             print('User Info:', user_info)
