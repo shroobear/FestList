@@ -7,6 +7,11 @@ from flask_migrate import Migrate
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
+from authlib.integrations.flask_client import OAuth
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Local imports
 
@@ -14,6 +19,9 @@ from sqlalchemy import MetaData
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SPOTIFY_CLIENT_SECRET'] = os.getenv("CLIENT_SECRET")
+app.config['SPOTIFY_CLIENT_ID'] = os.getenv("CLIENT_ID")
+app.config['SESSION_COOKIE_NAME'] = 'Spotify OAuth cookie'
 app.json.compact = False
 
 # Define metadata, instantiate db
@@ -27,5 +35,23 @@ db.init_app(app)
 # Instantiate REST API
 api = Api(app)
 
+app.secret_key = b'\xe2\xac\x1aF\x01\xbd2\xe5V\xf4\xb6\x0c\xf4|\x90\x1b'
+
 # Instantiate CORS
 CORS(app)
+
+# Instantiate OAuth
+oauth = OAuth(app)
+
+spotify = oauth.register(
+    name='spotify',
+    client_id= os.getenv("CLIENT_ID"),
+    client_secret= os.getenv("CLIENT_SECRET"),
+    access_token_url='https://accounts.spotify.com/api/token',
+    access_token_params=None,
+    authorize_url='https://accounts.spotify.com/authorize',
+    authorize_params=None,
+    api_base_url='https://api.spotify.com',
+    userinfo_endpoint='https://api.spotify.com/v1/me',
+    client_kwargs={'scope': 'user-read-private, user-read-email'}
+)
