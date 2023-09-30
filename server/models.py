@@ -11,7 +11,9 @@ class Festival(db.Model, SerializerMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
-    location = db.Column(db.String, nullable=False)
+    address = db.Column(db.String, nullable=False)
+    city = db.Column(db.String, nullable=False)
+    state = db.Column(db.String, nullable=False)
     date = db.Column(db.DateTime, nullable=False)
     website = db.Column(db.String)
     # Many to many relationship with Artist through lineups table
