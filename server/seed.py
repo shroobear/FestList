@@ -38,9 +38,45 @@ def seed_users():
             db.session.add(new_user)
         db.session.commit()
 
+def seed_festivals():
+    print('seeding festivals 🎫')
+    Faker.seed(0)
+    with alive_bar(25) as bar:
+        for i in range(25):
+            new_festival = Festival(
+                name = str(' '.join(fake.words(nb=3))).title(),
+                address = fake.street_address(),
+                city = fake.city(),
+                state = fake.state_abbr(),
+                date = fake.date_this_decade(before_today=False, after_today=True),
+                website = fake.domain_name()
+            )
+            bar()
+            db.session.add(new_festival)
+        db.session.commit()
+
+def seed_artists():
+    print('seeding artists 🎶🎸🎹🎶')
+    with alive_bar(200) as bar:
+        for i in range(200):
+            new_artist = Artist(
+                name = str(' '.join(fake.words(nb=3))).title()
+            )
+            bar()
+            db.session.add(new_artist)
+        db.session.commit()
+
+def clear_all():
+    clear_table(User)
+    clear_table(Festival)
+    clear_table(Artist)
+
+
 if __name__ == '__main__':
     with app.app_context():
         print("Starting seed...")
         # Seed code goes here!
-        clear_table(User)
+        clear_all()
         seed_users()
+        seed_festivals()
+        seed_artists()
