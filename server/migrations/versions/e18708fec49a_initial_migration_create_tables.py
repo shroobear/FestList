@@ -1,8 +1,8 @@
-"""Initial migration, create models
+"""Initial migration, create tables
 
-Revision ID: fab244e3136a
+Revision ID: e18708fec49a
 Revises: 
-Create Date: 2023-09-29 01:12:02.347742
+Create Date: 2023-09-30 14:00:46.924339
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'fab244e3136a'
+revision = 'e18708fec49a'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -26,7 +26,9 @@ def upgrade():
     op.create_table('festivals',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('location', sa.String(), nullable=False),
+    sa.Column('address', sa.String(), nullable=False),
+    sa.Column('city', sa.String(), nullable=False),
+    sa.Column('state', sa.String(), nullable=False),
     sa.Column('date', sa.DateTime(), nullable=False),
     sa.Column('website', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
@@ -34,6 +36,7 @@ def upgrade():
     op.create_table('songs',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
+    sa.Column('spotify_id', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('users',
@@ -42,7 +45,9 @@ def upgrade():
     sa.Column('last_name', sa.String(length=55), nullable=False),
     sa.Column('username', sa.String(length=25), nullable=False),
     sa.Column('email', sa.String(length=55), nullable=False),
-    sa.Column('password_hash', sa.String(), nullable=False),
+    sa.Column('spotify_access_token', sa.String(), nullable=True),
+    sa.Column('spotify_refresh_token', sa.String(), nullable=True),
+    sa.Column('_password_hash', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
@@ -51,8 +56,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('artist_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['artist_id'], ['artists.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['artist_id'], ['artists.id'], name=op.f('fk_favorites_artist_id_artists')),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_favorites_user_id_users')),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_id', 'artist_id', name='unique_favorite')
     )
@@ -60,8 +65,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('festival_id', sa.Integer(), nullable=False),
     sa.Column('artist_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['artist_id'], ['artists.id'], ),
-    sa.ForeignKeyConstraint(['festival_id'], ['festivals.id'], ),
+    sa.ForeignKeyConstraint(['artist_id'], ['artists.id'], name=op.f('fk_lineups_artist_id_artists')),
+    sa.ForeignKeyConstraint(['festival_id'], ['festivals.id'], name=op.f('fk_lineups_festival_id_festivals')),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('festival_id', 'artist_id', name='unique_lineup')
     )
@@ -69,8 +74,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('song_id', sa.Integer(), nullable=False),
     sa.Column('artist_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['artist_id'], ['artists.id'], ),
-    sa.ForeignKeyConstraint(['song_id'], ['songs.id'], ),
+    sa.ForeignKeyConstraint(['artist_id'], ['artists.id'], name=op.f('fk_song_artists_artist_id_artists')),
+    sa.ForeignKeyConstraint(['song_id'], ['songs.id'], name=op.f('fk_song_artists_song_id_songs')),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('song_id', 'artist_id', name='unique_collaboration')
     )
@@ -78,8 +83,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('festival_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['festival_id'], ['festivals.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['festival_id'], ['festivals.id'], name=op.f('fk_user_festivals_festival_id_festivals')),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_user_festivals_user_id_users')),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_id', 'festival_id', name='unique_rsvp')
     )
