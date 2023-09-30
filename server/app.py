@@ -5,10 +5,9 @@
 # Remote library imports
 from flask import Flask, request, url_for, redirect, session
 from flask_restful import Resource
-from flask_bcrypt import bcrypt
 
 # Local imports
-from config import app, db, api, oauth
+from config import app, db, api, oauth, bcrypt
 
 
 # Add your model imports
@@ -26,15 +25,13 @@ def signup():
         last_name = request.form.get('last_name')
         email = request.form.get('email')
 
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
         new_user = User(
             username=username, 
-            password_hash=hashed_password, 
             first_name=first_name, 
             last_name=last_name,
             email=email
         )
+        new_user.password_hash = password
         db.session.add(new_user)
         db.session.commit()
 
@@ -105,7 +102,6 @@ def logout():
     for key in list(session.keys()):
         session.pop(key)
     return redirect('/')
-
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
