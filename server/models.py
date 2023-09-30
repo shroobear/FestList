@@ -49,6 +49,7 @@ class Song(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
+    spotify_id = db.Column(db.String)
     # Many to many relationship with Artist through Song_Artist table
     song_artists = db.relationship('Song_Artist', back_populates='song')
 
@@ -73,11 +74,15 @@ class User(db.Model, SerializerMixin):
     last_name = db.Column(db.String(55), nullable=False)
     username = db.Column(db.String(25), nullable=False, unique=True)
     email = db.Column(db.String(55), nullable=False, unique=True)
-    # formatted for bcrypt hashing
-    password_hash = db.Column(db.String, nullable=False)
+    spotify_access_token = db.Column(db.String)
+    spotify_refresh_token = db.Column(db.String)
     # Defines many to many relationship through favorite table with artists
     favorites = db.relationship('Favorite', back_populates='user')
     user_festivals = db.relationship('User_Festival', back_populates='user')
+
+    # formatted for bcrypt hashing
+    password_hash = db.Column(db.String, nullable=False)
+   
 
 class Favorite(db.Model):
     __tablename__ = 'favorites'
@@ -100,4 +105,4 @@ class User_Festival(db.Model):
     festival_id = db.Column(db.Integer, db.ForeignKey('festivals.id'), nullable=False)
 
     user = db.relationship('User', back_populates='user_festivals')
-    festival = db.relationship('Festival', back_populates='user_festivals')
+    festival = db.relationship('Festival', back_populates='user_festival')
