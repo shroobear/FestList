@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 # Standard library imports
+from datetime import datetime
 
 # Remote library imports
-from flask import Flask, request, url_for, redirect, session
+from flask import Flask, request, url_for, redirect, session, jsonify, make_response
 from flask_restful import Resource
+from flask_marshmallow import Marshmallow
 
 # Local imports
 from config import app, db, api, oauth, bcrypt
@@ -14,7 +16,222 @@ from config import app, db, api, oauth, bcrypt
 from models import User, Festival, Artist, Song, User_Festival, Lineup, Favorite
 
 
+ma = Marshmallow(app)
+
 # Views go here!
+class UserSchema(ma.SQLAlchemySchema):
+    
+    class Meta:
+        model = User
+
+    first_name = ma.auto_field()
+    last_name = ma.auto_field()
+    username = ma.auto_field()
+    email = ma.auto_field()
+
+    url = ma.Hyperlinks(
+        {
+            "self": ma.URLFor(
+                "userbyid",
+                values = dict(id='<id>')),
+                "collection": ma.URLFor("users"),
+        }
+    )
+
+singular_user_schema = UserSchema()
+plural_user_schema = UserSchema(many=True)
+
+class FestivalSchema(ma.SQLAlchemySchema):
+
+    class Meta:
+        model = Festival
+
+    name = ma.auto_field()
+    address = ma.auto_field()
+    city = ma.auto_field()
+    state = ma.auto_field()
+    date = ma.auto_field()
+    website = ma.auto_field()
+
+    url = ma.Hyperlinks(
+        {
+            "self": ma.URLFor(
+                "festivalbyid",
+                values = dict(id='<id>')),
+            "collection": ma.URLFor("festivals"),
+        }
+    )
+
+singular_festival_schema = FestivalSchema()
+plural_festival_schema = FestivalSchema(many=True)
+
+class ArtistSchema(ma.SQLAlchemySchema):
+
+    class Meta:
+        model = Artist
+
+    name = ma.auto_field()
+
+    url = ma.Hyperlinks(
+        {
+            "self": ma.URLFor(
+                "artistbyid",
+                values=dict(id='<id>')),
+            "collection": ma.URLFor('artists'),
+        }
+    )
+
+singular_artist_schema = ArtistSchema()
+plural_artist_schema = ArtistSchema(many=True)
+
+class SongSchema(ma.SQLAlchemySchema):
+
+    class Meta:
+        model = Song
+
+        name = ma.auto_field()
+
+        url = ma.Hyperlinks(
+            {
+                "self": ma.URLFor(
+                    "songbyid",
+                    values=dict(id='<id>')),
+                "collection": ma.URLFor("artists"),
+            }
+        )
+
+singular_song_schema = SongSchema()
+plural_song_schema = SongSchema(many=True)
+
+class Index(Resource):
+
+    def get(self):
+
+        response_dict = {
+            "index": "Welcome to the FestList API"
+        }
+
+        response = make_response(
+            response_dict,
+            200,
+        )
+
+        return response
+    
+api.add_resource(Index, '/v1')
+
+class Users(Resource):
+
+    def get(self):
+
+        users = User.query.all()
+
+        response = make_response(
+            plural_user_schema.dump(users),
+            200,
+        )
+
+        return response
+    
+api.add_resource(Users, '/v1/users')
+
+class UserByID(Resource):
+
+    def get(self, id):
+
+        user = User.query.filter_by(id=id).first()
+
+        response = make_response(
+            singular_user_schema.dump(user),
+            200,
+        )
+
+        return response
+
+api.add_resource(UserByID, '/v1/users/<int:id>')
+
+class Festivals(Resource):
+    def get(self):
+
+        festivals = Festival.query.all()
+
+        response = make_response(
+            plural_festival_schema.dump(festivals),
+            200,
+        )
+
+        return response
+    
+    def post(self):
+        
+        date_str = request.form['date']
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+        new_festival = Festival(
+            name=request.form['name'],
+            address=request.form['address'],
+            city=request.form['city'],
+            state=request.form['state'],
+            date=date_obj,
+            website=request.form['website'],
+        )
+        db.session.add(new_festival)
+        db.session.commit()
+
+        response = make_response(
+            singular_festival_schema.dump(new_festival),
+            201,
+        )
+
+        return response
+
+api.add_resource(Festivals, '/v1/festivals')
+
+class FestivalByID(Resource):
+    def get(self, id):
+
+        festival = Festival.query.filter_by(id=id).first()
+
+        response = make_response(
+            singular_festival_schema.dump(festival),
+            200,
+        )
+
+        return response
+    
+    def patch(self, id):
+
+        festival = Festival.query.filter_by(id=id).first()
+        for attr in request.form:
+            setattr(festival, attr, request.form[attr])
+
+        db.session.add(festival)
+        db.session.commit()
+
+        response = make_response(
+            singular_festival_schema.dump(festival),
+            200
+        )
+
+        return response
+    
+    def delete(self, id):
+
+        festival = Festival.query.filter_by(id=id).first()
+
+        db.session.delete(festival)
+        db.session.commit()
+
+        response_dict = {"message": "festival successfully deleted"}
+
+        response = make_response(
+            response_dict,
+            200
+        )
+
+        return response
+    
+api.add_resource(FestivalByID, '/v1/festivals/<int:id>')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -53,12 +270,12 @@ def festlist_login():
             return 'Invalid login credentials', 401
     return 'FestList Login Page'
 
-@app.route('/')
-def index():
-    print('running index')
-    email = dict(session).get('email', None)
-    name = dict(session).get('display_name')
-    return f'FestList Home Page. Hello, {name}'
+# @app.route('/')
+# def index():
+#     print('running index')
+#     email = dict(session).get('email', None)
+#     name = dict(session).get('display_name')
+#     return f'FestList Home Page. Hello, {name}'
 
 @app.route('/spotify_login')
 def spotify_login():
@@ -102,6 +319,9 @@ def logout():
     for key in list(session.keys()):
         session.pop(key)
     return redirect('/')
+
+
+
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
