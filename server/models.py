@@ -1,5 +1,4 @@
 from sqlalchemy.schema import UniqueConstraint
-from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.associationproxy import association_proxy
 
@@ -8,7 +7,7 @@ from config import db, bcrypt
 
 # Models go here!
 
-class Festival(db.Model, SerializerMixin):
+class Festival(db.Model):
     __tablename__ = 'festivals'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -16,14 +15,14 @@ class Festival(db.Model, SerializerMixin):
     address = db.Column(db.String, nullable=False)
     city = db.Column(db.String, nullable=False)
     state = db.Column(db.String, nullable=False)
-    date = db.Column(db.DateTime, nullable=False)
+    date = db.Column(db.Date, nullable=False)
     website = db.Column(db.String)
     # Many to many relationship with Artist through lineups table
     lineup = db.relationship('Lineup', back_populates='festival')
 
     user_festival = db.relationship('User_Festival', back_populates='festival')
 
-class Artist(db.Model, SerializerMixin):
+class Artist(db.Model):
     __tablename__ = 'artists'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -70,7 +69,7 @@ class Song_Artist(db.Model):
     artist = db.relationship('Artist', back_populates='song_artists')
 
 
-class User(db.Model, SerializerMixin):
+class User(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
