@@ -21,7 +21,7 @@ def clear_table(table_class):
     print(f'{table_class} table cleared')
 
 def seed_users():
-    print("Seeding Users 👥\n")
+    print("\nSeeding Users 👥\n")
     Faker.seed(0)
     with alive_bar(50) as bar:
         for i in range (50):
@@ -39,7 +39,7 @@ def seed_users():
         db.session.commit()
 
 def seed_festivals():
-    print('seeding festivals 🧑‍🎤')
+    print('\nseeding festivals 🧑‍🎤 \n')
     Faker.seed(0)
     with alive_bar(25) as bar:
         for i in range(25):
@@ -56,7 +56,7 @@ def seed_festivals():
         db.session.commit()
 
 def seed_artists():
-    print('seeding artists 🎶🎸🎹🎶')
+    print('\nseeding artists 🎶🎸🎹🎶\n')
     Faker.seed(0)
     with alive_bar(500) as bar:
         for i in range(500):
@@ -68,7 +68,7 @@ def seed_artists():
         db.session.commit()
 
 def seed_songs():
-    print('Seeding Songs 🎧')
+    print('\nSeeding Songs 🎧\n')
     Faker.seed(0)
     with alive_bar(1500) as bar:
         for i in range(1500):
@@ -80,7 +80,7 @@ def seed_songs():
         db.session.commit()
 
 def seed_lineups():
-    print('creating lineups... ✨')
+    print('\ncreating lineups... ✨\n')
     Faker.seed(0)
     lineup_pairs = set()
     num_lineups = 750
@@ -99,7 +99,7 @@ def seed_lineups():
         db.session.commit()
 
 def seed_favorites():
-    print('Assigning Favorites 💖')
+    print('\nAssigning Favorites 💖\n')
     Faker.seed(0)
     favorite_artists = set()
     with alive_bar(2000) as bar:
@@ -119,7 +119,7 @@ def seed_favorites():
         db.session.commit()
 
 def seed_rsvps():
-    print('Selling Festival Tickets 🎟️')
+    print('\nSelling Festival Tickets 🎟️\n')
     sold_tickets = set()
     with alive_bar(1000) as bar:
         while len(sold_tickets) < 1000:
@@ -137,7 +137,7 @@ def seed_rsvps():
         db.session.commit()
 
 def seed_song_artists():
-    print('Writing Music 📝🎼')
+    print('\nWriting Music 📝🎼\n')
     artist_songs = set()
     
     with alive_bar(2000) as bar:
