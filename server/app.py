@@ -89,16 +89,16 @@ class SongSchema(ma.SQLAlchemySchema):
     class Meta:
         model = Song
 
-        name = ma.auto_field()
+    name = ma.auto_field()
 
-        url = ma.Hyperlinks(
-            {
-                "self": ma.URLFor(
-                    "songbyid",
-                    values=dict(id='<id>')),
-                "collection": ma.URLFor("artists"),
-            }
-        )
+    url = ma.Hyperlinks(
+        {
+            "self": ma.URLFor(
+                "songbyid",
+                values=dict(id='<id>')),
+            "collection": ma.URLFor("artists"),
+        }
+    )
 
 singular_song_schema = SongSchema()
 plural_song_schema = SongSchema(many=True)
@@ -132,6 +132,7 @@ class Users(Resource):
         )
 
         return response
+    
     
 api.add_resource(Users, '/v1/users')
 
@@ -232,6 +233,62 @@ class FestivalByID(Resource):
         return response
     
 api.add_resource(FestivalByID, '/v1/festivals/<int:id>')
+
+class Artists(Resource):
+    def get(self):
+
+        artists = Artist.query.all()
+
+        response = make_response(
+            plural_artist_schema.dump(artists),
+            200,
+        )
+
+        return response
+    
+api.add_resource(Artists, '/v1/artists')
+
+class ArtistByID(Resource):
+    def get(self, id):
+
+        artist = Artist.query.filter_by(id=id).first()
+
+        response = make_response(
+            singular_artist_schema.dump(artist),
+            200,
+        )
+
+        return response
+
+api.add_resource(ArtistByID, '/v1/artists/<int:id>')
+
+class Songs(Resource):
+    def get(self):
+
+        songs = Song.query.all()
+
+        response = make_response(
+            plural_song_schema.dump(songs),
+            200,
+        )
+
+        return response
+    
+api.add_resource(Songs, '/v1/songs')
+
+class SongByID(Resource):
+    def get(self, id):
+
+        song = Song.query.filter_by(id=id).first()
+
+        response = make_response(
+            singular_song_schema.dump(song),
+            200,
+        )
+
+        return response
+    
+api.add_resource(SongByID, '/v1/songs/<int:id>')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
