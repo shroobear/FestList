@@ -9,7 +9,7 @@ from flask_restful import Resource
 from flask_marshmallow import Marshmallow
 
 # Local imports
-from config import app, db, api, oauth, bcrypt
+from config import app, db, api, oauth, bcrypt, host_port
 
 
 # Add your model imports
@@ -24,6 +24,7 @@ class UserSchema(ma.SQLAlchemySchema):
     class Meta:
         model = User
 
+    id = ma.auto_field()
     first_name = ma.auto_field()
     last_name = ma.auto_field()
     username = ma.auto_field()
@@ -46,6 +47,7 @@ class FestivalSchema(ma.SQLAlchemySchema):
     class Meta:
         model = Festival
 
+    id = ma.auto_field()
     name = ma.auto_field()
     address = ma.auto_field()
     city = ma.auto_field()
@@ -70,6 +72,7 @@ class ArtistSchema(ma.SQLAlchemySchema):
     class Meta:
         model = Artist
 
+    id = ma.auto_field()
     name = ma.auto_field()
 
     url = ma.Hyperlinks(
@@ -89,6 +92,7 @@ class SongSchema(ma.SQLAlchemySchema):
     class Meta:
         model = Song
 
+    id = ma.auto_field()
     name = ma.auto_field()
 
     url = ma.Hyperlinks(
@@ -105,10 +109,19 @@ plural_song_schema = SongSchema(many=True)
 
 class Index(Resource):
 
-    def get(self):
+    
 
+    def get(self):
+        name = dict(session).get('display_name')
         response_dict = {
-            "index": "Welcome to the FestList API"
+            "index": f"Welcome to the FestList API. Hello, {name}",
+            "endpoint directory": [
+                {"festivals": f"{host_port}/v1/festivals",
+                "users": f"{host_port}/v1/users",
+                "artists": f"{host_port}/v1/artists",
+                "songs": f"{host_port}/v1/songs"
+                }
+            ]
         }
 
         response = make_response(
@@ -463,7 +476,7 @@ def authorize():
 
             
             print('User Info:', user_info)
-            return redirect('/')
+            return redirect('/v1')
         else:
             return "Authorization failed", 400
     except Exception as e:
