@@ -59,3 +59,5 @@ spotify = oauth.register(
 
 # Instantiate bcrypt
 bcrypt = Bcrypt(app)
+
+host_port = "http://localhost:5555"
