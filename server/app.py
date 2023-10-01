@@ -158,6 +158,12 @@ class Users(Resource):
         )
         new_user.password_hash = password
 
+        if User.query.filter(User.username == new_user.username).first():
+            return make_response({"message": "Username already taken"}, 409)
+        
+        elif User.query.filter(User.email == new_user.email).first():
+            return make_response({"message": "An account already exists under that email"}, 409)
+
         if username and password:
             db.session.add(new_user)
             db.session.commit()
@@ -399,7 +405,6 @@ def festlist_login():
         password = data['password']
 
         user = User.query.filter_by(email=email).first()
-        import ipdb; ipdb.set_trace
 
         if user and user.authenticate(password) == True:
             session["user_id"] = user.id
