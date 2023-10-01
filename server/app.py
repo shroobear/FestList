@@ -133,6 +133,25 @@ class Users(Resource):
 
         return response
     
+    def post(self):
+
+        new_user = User(
+            first_name = request.form['first_name'],
+            last_name = request.form['last_name'],
+            username = request.form['username'],
+            email = request.form['email'],
+        )
+        new_user.password_hash = request.form['password']
+        
+        db.session.add(new_user)
+        db.session.commit()
+
+        response = make_response(
+            singular_user_schema.dump(new_user),
+            201,
+        )
+
+        return response
     
 api.add_resource(Users, '/v1/users')
 
@@ -145,6 +164,38 @@ class UserByID(Resource):
         response = make_response(
             singular_user_schema.dump(user),
             200,
+        )
+
+        return response
+    
+    def patch(self, id):
+
+        user = User.query.filter_by(id=id).first()
+        for attr in request.form:
+            setattr(user, attr, request.form[attr])
+
+        db.session.add(user)
+        db.session.commit()
+
+        response = make_response(
+            singular_user_schema.dump(user),
+            200
+        )
+
+        return response
+    
+    def delete(self, id):
+
+        user = User.query.filter_by(id=id).first()
+
+        db.session.delete(user)
+        db.session.commit()
+
+        response_dict = {"message": "user successfully deleted."}
+
+        response = make_response(
+            response_dict,
+            200
         )
 
         return response
@@ -246,6 +297,21 @@ class Artists(Resource):
 
         return response
     
+    def post(self):
+
+        new_artist = Artist(
+            name=request.form['name']
+        )
+        db.session.add(new_artist)
+        db.session.commit()
+
+        response=make_response(
+            singular_artist_schema.dump(new_artist),
+            201,
+        )
+
+        return response
+    
 api.add_resource(Artists, '/v1/artists')
 
 class ArtistByID(Resource):
@@ -256,6 +322,39 @@ class ArtistByID(Resource):
         response = make_response(
             singular_artist_schema.dump(artist),
             200,
+        )
+
+        return response
+    
+    def patch(self, id):
+
+        artist = Artist.query.filter_by(id=id).first()
+
+        for attr in request.form:
+            setattr(artist, attr, request.form[attr])
+
+        db.session.add(artist)
+        db.session.commit()
+
+        response = make_response(
+            singular_artist_schema.dump(artist),
+            200
+        )
+
+        return response
+    
+    def delete(self, id):
+
+        artist = Artist.query.filter_by(id=id).first()
+
+        db.session.delete(artist)
+        db.session.commit()
+
+        response_dict = {"message": "Artist successfully deleted."}
+
+        response = make_response(
+            response_dict,
+            200
         )
 
         return response
