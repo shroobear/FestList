@@ -23,7 +23,7 @@ function NavBar() {
                     </li>
                     <li>
                         <NavLink exact to="/favorites">
-                            Favorite Artists
+                            Artist Search
                         </NavLink>
                     </li>
                 </ul>

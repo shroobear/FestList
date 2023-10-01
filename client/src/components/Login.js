@@ -59,9 +59,9 @@ const Login = () => {
     });
 
     return (
-        <div>
+        <div className='form-container'>
             <h1>Login</h1>
-            <form onSubmit={formik.handleSubmit}>
+            <form onSubmit={formik.handleSubmit} className='form'>
                 <label htmlFor="email">Email Address</label>
                 <br />
                 <input 
@@ -90,6 +90,7 @@ const Login = () => {
                 </p>
                 <button type='submit'>Login</button>
             </form>
+            <p>New User? Sign up <a href="/signup">here!</a></p>
         </div>
     )
 }
