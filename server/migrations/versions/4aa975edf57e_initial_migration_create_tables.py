@@ -1,8 +1,8 @@
-"""Initial migration, create tables
+"""Initial Migration, create tables
 
-Revision ID: e18708fec49a
+Revision ID: 4aa975edf57e
 Revises: 
-Create Date: 2023-09-30 14:00:46.924339
+Create Date: 2023-09-30 20:30:03.493804
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'e18708fec49a'
+revision = '4aa975edf57e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -29,7 +29,7 @@ def upgrade():
     sa.Column('address', sa.String(), nullable=False),
     sa.Column('city', sa.String(), nullable=False),
     sa.Column('state', sa.String(), nullable=False),
-    sa.Column('date', sa.DateTime(), nullable=False),
+    sa.Column('date', sa.Date(), nullable=False),
     sa.Column('website', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
@@ -56,8 +56,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('artist_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['artist_id'], ['artists.id'], name=op.f('fk_favorites_artist_id_artists')),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_favorites_user_id_users')),
+    sa.ForeignKeyConstraint(['artist_id'], ['artists.id'], name=op.f('fk_favorites_artist_id_artists'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_favorites_user_id_users'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_id', 'artist_id', name='unique_favorite')
     )
@@ -65,8 +65,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('festival_id', sa.Integer(), nullable=False),
     sa.Column('artist_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['artist_id'], ['artists.id'], name=op.f('fk_lineups_artist_id_artists')),
-    sa.ForeignKeyConstraint(['festival_id'], ['festivals.id'], name=op.f('fk_lineups_festival_id_festivals')),
+    sa.ForeignKeyConstraint(['artist_id'], ['artists.id'], name=op.f('fk_lineups_artist_id_artists'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['festival_id'], ['festivals.id'], name=op.f('fk_lineups_festival_id_festivals'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('festival_id', 'artist_id', name='unique_lineup')
     )
@@ -74,8 +74,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('song_id', sa.Integer(), nullable=False),
     sa.Column('artist_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['artist_id'], ['artists.id'], name=op.f('fk_song_artists_artist_id_artists')),
-    sa.ForeignKeyConstraint(['song_id'], ['songs.id'], name=op.f('fk_song_artists_song_id_songs')),
+    sa.ForeignKeyConstraint(['artist_id'], ['artists.id'], name=op.f('fk_song_artists_artist_id_artists'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['song_id'], ['songs.id'], name=op.f('fk_song_artists_song_id_songs'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('song_id', 'artist_id', name='unique_collaboration')
     )
@@ -83,8 +83,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('festival_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['festival_id'], ['festivals.id'], name=op.f('fk_user_festivals_festival_id_festivals')),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_user_festivals_user_id_users')),
+    sa.ForeignKeyConstraint(['festival_id'], ['festivals.id'], name=op.f('fk_user_festivals_festival_id_festivals'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_user_festivals_user_id_users'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_id', 'festival_id', name='unique_rsvp')
     )
