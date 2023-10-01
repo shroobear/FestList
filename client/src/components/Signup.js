@@ -6,6 +6,8 @@ import * as yup from "yup";
 
 export const SignupForm = () => {
 
+    const [errorMessage, setErrorMessage] = useState("")
+
     
     const history = useHistory()
 
@@ -40,7 +42,14 @@ export const SignupForm = () => {
           },
           body: JSON.stringify(values, null, 2),
         })
-        .then((res) => res.json())
+        .then((res) => {
+            if (res.status === 409) {
+                return res.json().then(data => {
+                    throw new Error(data.message);
+                });
+            }
+            return res.json()
+        })
         .then((data) => {
           if (data && data.id) {
             sessionStorage.setItem('userID', data.id);
@@ -56,14 +65,15 @@ export const SignupForm = () => {
         })
         .catch((err) => {
           console.error("There was an error with the registration:", err);
+          setErrorMessage(err.message)
         });
       }
     });
 
   return (
-    <div>
+    <div className="form-container">
       <h1>Signup Form</h1>
-      <form onSubmit={formik.handleSubmit}>
+      <form onSubmit={formik.handleSubmit} className="form">
         <label htmlFor="email">Email Address</label>
         <br />
         <input
@@ -142,8 +152,11 @@ export const SignupForm = () => {
         <p style={{ color: "red" }}>
             {formik.touched.confirmPassword && formik.errors.confirmPassword ? formik.errors.confirmPassword : null}
         </p>
+        {errorMessage && <p style={{ color: "red" }}classname="error-message">{errorMessage}</p>}
+        <br />
         <button type="submit">Submit</button>
       </form>
+      <p>Already registered? Click <a href="/login">here</a> to Login</p>
     </div>
   );
 };
