@@ -147,23 +147,30 @@ class Users(Resource):
         return Routing.get_all(self, User, plural_user_schema)
 
     def post(self):
+        password = request.form.get('password')
+        username = request.form.get('username')
         new_user = User(
-            first_name=request.form["first_name"],
-            last_name=request.form["last_name"],
-            username=request.form["username"],
-            email=request.form["email"],
+            username=username,
+            first_name = request.form.get('first_name'),
+            last_name = request.form.get('last_name'),
+            email = request.form.get('email')
         )
-        new_user.password_hash = request.form["password"]
+        new_user.password_hash = password
 
-        db.session.add(new_user)
-        db.session.commit()
+        if username and password:
+            db.session.add(new_user)
+            db.session.commit()
 
-        response = make_response(
-            singular_user_schema.dump(new_user),
-            201,
-        )
+            session['user_id'] = new_user.id
 
-        return response
+            response = make_response(
+                singular_user_schema.dump(new_user),
+                201
+            )
+
+            return response
+        
+        return {'error': '422 Unprocessable Entity'}, 422
 
 
 api.add_resource(Users, "/v1/users")
@@ -384,26 +391,6 @@ class Attendees(Resource):
 api.add_resource(Attendees, "/v1/festivals/<int:id>/attendees")
 
 
-@app.route("/v1/signup", methods=["GET", "POST"])
-def signup():
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        first_name = request.form.get("first_name")
-        last_name = request.form.get("last_name")
-        email = request.form.get("email")
-
-        new_user = User(
-            username=username, first_name=first_name, last_name=last_name, email=email
-        )
-        new_user.password_hash = password
-        db.session.add(new_user)
-        db.session.commit()
-
-        return redirect(url_for("index"))
-    return "Signup Page"
-
-
 @app.route("/v1/festlist_login", methods=["GET", "POST"])
 def festlist_login():
     if request.method == "POST":
@@ -418,15 +405,6 @@ def festlist_login():
         else:
             return "Invalid login credentials", 401
     return "FestList Login Page"
-
-
-# @app.route('/')
-# def index():
-#     print('running index')
-#     email = dict(session).get('email', None)
-#     name = dict(session).get('display_name')
-#     return f'FestList Home Page. Hello, {name}'
-
 
 @app.route("/v1/spotify_login")
 def spotify_login():
