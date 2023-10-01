@@ -147,21 +147,20 @@ class Users(Resource):
         return Routing.get_all(self, User, plural_user_schema)
 
     def post(self):
-        password = request.form.get('password')
-        username = request.form.get('username')
+        data = request.get_json()
+        password = data['password']
+        username = data['username']
         new_user = User(
             username=username,
-            first_name = request.form.get('first_name'),
-            last_name = request.form.get('last_name'),
-            email = request.form.get('email')
+            first_name = data['firstName'],
+            last_name = data['lastName'],
+            email = data['email']
         )
         new_user.password_hash = password
 
         if username and password:
             db.session.add(new_user)
             db.session.commit()
-
-            session['user_id'] = new_user.id
 
             response = make_response(
                 singular_user_schema.dump(new_user),
@@ -393,17 +392,20 @@ api.add_resource(Attendees, "/v1/festivals/<int:id>/attendees")
 
 @app.route("/v1/festlist_login", methods=["GET", "POST"])
 def festlist_login():
+    data = request.get_json()
+
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+        email = data['email']
+        password = data['password']
 
-        user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(email=email).first()
+        import ipdb; ipdb.set_trace
 
-        if user and bcrypt.checkpw(password.encode("utf-8"), user.password_hash):
+        if user and user.authenticate(password) == True:
             session["user_id"] = user.id
-            return redirect(url_for("index"))
+            return jsonify(user_id=user.id, first_name=user.first_name, last_name=user.last_name, email=user.email, username=user.username), 200
         else:
-            return "Invalid login credentials", 401
+            return jsonify({"message": "Invalid login credentials"}), 401
     return "FestList Login Page"
 
 @app.route("/v1/spotify_login")
