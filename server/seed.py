@@ -121,8 +121,8 @@ def seed_favorites():
 def seed_rsvps():
     print('\nSelling Festival Tickets 🎟️\n')
     sold_tickets = set()
-    with alive_bar(1000) as bar:
-        while len(sold_tickets) < 1000:
+    with alive_bar(300) as bar:
+        while len(sold_tickets) < 300:
             user_id = randint(1,50)
             festival_id = randint(1, 25)
             pair = (user_id, festival_id)
