@@ -14,7 +14,7 @@ from config import app, db, api, oauth, bcrypt, host_port
 
 
 # Add your model imports
-from models import User, Festival, Artist, Song, User_Festival, Lineup, Favorite
+from models import User, Festival, Artist, Song, User_Festival, Lineup, Favorite, Song_Artist
 
 
 ma = Marshmallow(app)
@@ -94,6 +94,7 @@ class SongSchema(ma.SQLAlchemySchema):
 
     id = ma.auto_field()
     name = ma.auto_field()
+
 
     url = ma.Hyperlinks(
         {
@@ -298,7 +299,7 @@ class FestivalByID(Resource):
     
 api.add_resource(FestivalByID, '/v1/festivals/<int:id>')
 
-class Lineups(Resource):
+class Lineup(Resource):
     def get(self, id):
         
         lineup = (db.session.query(Lineup)
@@ -315,7 +316,7 @@ class Lineups(Resource):
 
         return response
     
-api.add_resource(Lineups, '/v1/festivals/<int:id>/lineup')
+api.add_resource(Lineup, '/v1/festivals/<int:id>/lineup')
 
 
 class Artists(Resource):
@@ -394,6 +395,44 @@ class ArtistByID(Resource):
 
 api.add_resource(ArtistByID, '/v1/artists/<int:id>')
 
+class Favorites(Resource):
+    def get(self, id):
+
+        favorites = (db.session.query(Favorite)
+                     .options(joinedload(Favorite.artist))
+                     .filter(Favorite.user_id == id)
+                     .all())
+        
+        artists = [entry.artist for entry in favorites]
+
+        response = make_response(
+            plural_artist_schema.dump(artists),
+            200
+        )
+
+        return response
+
+api.add_resource(Favorites, '/v1/users/<int:id>/favorites')
+
+class SongsByArtist(Resource):
+    def get(self, id):
+
+        songs_by_artist = (db.session.query(Song_Artist)
+                           .options(joinedload(Song_Artist.song))
+                           .filter(Song_Artist.artist_id == id)
+                           .all())
+        
+        songs = [entry.song for entry in songs_by_artist]
+
+        response = make_response(
+            plural_song_schema.dump(songs),
+            200
+        )
+
+        return response
+    
+api.add_resource(SongsByArtist, '/v1/artists/<int:id>/songs')
+
 class Songs(Resource):
     def get(self):
 
@@ -471,6 +510,64 @@ class SongByID(Resource):
         return response
     
 api.add_resource(SongByID, '/v1/songs/<int:id>')
+
+class ArtistsBySong(Resource):
+    def get(self, id):
+
+        artists_by_song = (db.session.query(Song_Artist)
+                           .options(joinedload(Song_Artist.artist))
+                           .filter(Song_Artist.song_id == id)
+                           .all())
+        
+        artists = [entry.artist for entry in artists_by_song]
+
+        response = make_response(
+            plural_artist_schema.dump(artists),
+            200
+        )
+
+        return response
+
+api.add_resource(ArtistsBySong, '/v1/songs/<int:id>/artists')
+
+class FestivalRSVPs(Resource):
+    def get(self, id):
+
+        festival_rsvps = (db.session.query(User_Festival)
+                          .options(joinedload(User_Festival.festival))
+                          .filter(User_Festival.user_id == id)
+                          .all())
+        
+        festivals = [entry.festival for entry in festival_rsvps]
+
+        response = make_response(
+            plural_festival_schema.dump(festivals),
+            200
+        )
+
+        return response
+    
+api.add_resource(FestivalRSVPs, '/v1/users/<int:id>/rsvps')
+
+class Attendees(Resource):
+    def get(self, id):
+
+        attendees = (db.session.query(User_Festival)
+                     .options(joinedload(User_Festival.user))
+                     .filter(User_Festival.festival_id == id)
+                     .all())
+        
+        users = [entry.user for entry in attendees]
+
+        response = make_response(
+            plural_user_schema.dump(users),
+            200
+        )
+
+        return response
+    
+api.add_resource(Attendees, '/v1/festivals/<int:id>/attendees')
+    
 
 @app.route('/v1/signup', methods=['GET', 'POST'])
 def signup():
