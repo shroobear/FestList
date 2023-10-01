@@ -31,14 +31,11 @@ class Routing:
 
         if not entry:
             return make_response({'message': f'{deleted_item} not found'}, 404)
-        try:
-            db.session.delete(entry)
-            db.session.commit()
-            return make_response({'message': f"{deleted_item} successfully deleted."}, 200)
+
+        db.session.delete(entry)
+        db.session.commit()
+        return make_response({'message': f"{deleted_item} successfully deleted."}, 200)
         
-        except sa.SQLAlchemyError:
-            db.session.rollback()
-            return {'message': 'An error occurred during deletion.'}, 500
     
     def get_by_id(self, id, table_class, schema):
         entry = table_class.query.filter_by(id=id).first()
@@ -58,15 +55,12 @@ class Routing:
 
         if not entry:
             return make_response({'message': 'Entry not found'}, 404)
-        try:
-            for attr in request.form:
-                setattr(entry, attr, request.form[attr])
+        
+        for attr in request.form:
+            setattr(entry, attr, request.form[attr])
 
-                db.session.add(entry)
-                db.session.commit()
+            db.session.add(entry)
+            db.session.commit()
 
-                return make_response(schema.dump(entry), 200)
+            return make_response(schema.dump(entry), 200)
 
-        except sa.SQLAlchemyError:
-            db.session.rollback()
-            return make_response({'message': 'An error occurred during update'}, 500)
