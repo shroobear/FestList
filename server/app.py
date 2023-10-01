@@ -7,6 +7,7 @@ from datetime import datetime
 from flask import Flask, request, url_for, redirect, session, jsonify, make_response
 from flask_restful import Resource
 from flask_marshmallow import Marshmallow
+from sqlalchemy.orm import joinedload
 
 # Local imports
 from config import app, db, api, oauth, bcrypt, host_port
@@ -54,15 +55,14 @@ class FestivalSchema(ma.SQLAlchemySchema):
     state = ma.auto_field()
     date = ma.auto_field()
     website = ma.auto_field()
+    url = ma.Method("generate_urls")
 
-    url = ma.Hyperlinks(
-        {
-            "self": ma.URLFor(
-                "festivalbyid",
-                values = dict(id='<id>')),
-            "collection": ma.URLFor("festivals"),
+    def generate_urls(self, obj):
+        return{
+            "self": f"/v1/festivals/{obj.id}",
+            "collection": "/v1/festivals",
+            "lineup": f"/v1/festivals/{obj.id}/lineup"
         }
-    )
 
 singular_festival_schema = FestivalSchema()
 plural_festival_schema = FestivalSchema(many=True)
@@ -298,6 +298,26 @@ class FestivalByID(Resource):
     
 api.add_resource(FestivalByID, '/v1/festivals/<int:id>')
 
+class Lineups(Resource):
+    def get(self, id):
+        
+        lineup = (db.session.query(Lineup)
+                  .options(joinedload(Lineup.artist))
+                  .filter(Lineup.festival_id == id)
+                  .all())
+        
+        artists = [entry.artist for entry in lineup]
+
+        response = make_response(
+            plural_artist_schema.dump(artists),
+            200
+        )
+
+        return response
+    
+api.add_resource(Lineups, '/v1/festivals/<int:id>/lineup')
+
+
 class Artists(Resource):
     def get(self):
 
@@ -386,6 +406,21 @@ class Songs(Resource):
 
         return response
     
+    def post(self):
+
+        new_song = Song(
+            name = request.form['name']
+        )
+        db.session.add(new_song)
+        db.session.commit()
+
+        response = make_response(
+            singular_song_schema.dump(new_song),
+            201
+        )
+
+        return response
+    
 api.add_resource(Songs, '/v1/songs')
 
 class SongByID(Resource):
@@ -400,9 +435,44 @@ class SongByID(Resource):
 
         return response
     
+    def patch(self, id):
+
+        song = Song.query.filter_by(id=id).first()
+
+        for attr in request.form:
+            setattr(song, attr, request.form[attr])
+
+        db.session.add(song)
+        db.session.commit()
+
+        response = make_response(
+            singular_song_schema.dump(song),
+            200
+        )
+
+        return response
+    
+    def delete(self, id):
+
+        song = Song.query.filter_by(id=id).first()
+
+        db.session.delete(song)
+        db.session.commit()
+
+        response_dict = {
+            "message" : "Song successfully deleted."
+        }
+
+        response = make_response(
+            response_dict,
+            200
+        )
+
+        return response
+    
 api.add_resource(SongByID, '/v1/songs/<int:id>')
 
-@app.route('/signup', methods=['GET', 'POST'])
+@app.route('/v1/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -424,7 +494,7 @@ def signup():
         return redirect(url_for('index'))
     return 'Signup Page'
 
-@app.route('/festlist_login', methods=['GET', 'POST'])
+@app.route('/v1/festlist_login', methods=['GET', 'POST'])
 def festlist_login():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -446,7 +516,7 @@ def festlist_login():
 #     name = dict(session).get('display_name')
 #     return f'FestList Home Page. Hello, {name}'
 
-@app.route('/spotify_login')
+@app.route('/v1/spotify_login')
 def spotify_login():
     print('running login')
     spotify = oauth.create_client('spotify')
@@ -454,11 +524,11 @@ def spotify_login():
     response = spotify.authorize_redirect(redirect_uri)
     return response
 
-@app.route('/redirect')
+@app.route('/v1/redirect')
 def redirect_page():
     return 'redirect'
 
-@app.route('/authorize')
+@app.route('/v1/authorize')
 def authorize():
     try:
         spotify = oauth.create_client('spotify')
@@ -483,11 +553,11 @@ def authorize():
         print(f"An error occurred: {e}")
         return "An error occurred during authorization", 400
 
-@app.route('/logout')
+@app.route('/v1/logout')
 def logout():
     for key in list(session.keys()):
         session.pop(key)
-    return redirect('/')
+    return redirect('/v1')
 
 
 
