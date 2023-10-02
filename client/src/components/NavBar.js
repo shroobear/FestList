@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useContext } from "react";
 import { NavLink } from "react-router-dom";
+import AppContext from "../context/AppContext";
 
-function NavBar() {
+function NavBar({ logout }) {
+    const { currentUser } = useContext(AppContext);
+
     return (
         <div className="navBar-container">
             <div className="navbar-links">
@@ -13,7 +16,7 @@ function NavBar() {
                     </li>
                     <li>
                         <NavLink exact to="/festivals">
-                            My Festivals
+                            Festivals
                         </NavLink>
                     </li>
                     <li>
@@ -22,9 +25,15 @@ function NavBar() {
                         </NavLink>
                     </li>
                     <li>
-                        <NavLink exact to="/favorites">
-                            Artist Search
-                        </NavLink>
+                        {currentUser !== null ? (
+                            <button onClick={logout}>
+                                Logout
+                            </button>
+                        ) : (
+                            <NavLink exact to="/login">
+                                Login
+                            </NavLink>
+                        )}
                     </li>
                 </ul>
             </div>
