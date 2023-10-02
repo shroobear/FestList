@@ -1,65 +1,71 @@
-import React, { useEffect, useState } from "react";
-import { Switch, Route } from "react-router-dom";
-import "./App.css"
-import NavBar from "./components/NavBar"
-import Dashboard from "./components/Dashboard"
+import React, { useEffect, useState, useContext } from "react";
+import { Switch, Route, useHistory } from "react-router-dom";
+import "./App.css";
+import NavBar from "./components/NavBar";
+import Dashboard from "./components/Dashboard";
 import FavoriteArtists from "./components/ArtistSearch";
 import MyFestivals from "./components/MyFestivals";
 import Profile from "./components/Profile";
 import Login from "./components/Login";
-import { SignupForm } from "./components/Signup"
+import { SignupForm } from "./components/Signup";
 import AppProvider from "./context/AppProvider";
+import { Redirect } from "react-router-dom/cjs/react-router-dom.min";
+import AppContext from "./context/AppContext";
 
-const APILink = "http://localhost:5555"
-
+const APILink = "http://localhost:5555";
 
 function App() {
-  const [user, setUser] = useState(null);
-    const [error, setError] = useState(null);
+  const history = useHistory();
+  const { currentUser, setCurrentUser, errorMessage, setErrorMessage } = useContext(AppContext);
+  function logout() {
+    sessionStorage.clear();
+    fetch("/v1/logout");
+    setCurrentUser(null);
+    history.push("/login");
 
-    useEffect(() => {
-        fetch('/v1/check_session')
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then((data) => {
-                setUser(data);
-            })
-            .catch((error) => {
-                setError(error.toString());
-            });
-    }, []);
-    console.log(user)
+    return null;
+  }
+
+  useEffect(() => {
+    fetch("/v1/check_session")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setCurrentUser(data);
+      })
+      .catch((error) => {
+        setErrorMessage(errorMessage.toString());
+      });
+  }, []);
+  console.log("currentUser from useEffect", currentUser);
   return (
-      <AppProvider>
-        <div>
-          <NavBar />
-          <Switch>
-            <Route path = "/login">
-              {user ? null : <Login />}
-            </Route>
-            <Route path = "/signup">
-              {user ? null : <SignupForm />}
-            </Route>
-            <Route exact path="/">
-              <Dashboard />
-            </Route>
-            <Route path="/favorites">
-              <FavoriteArtists />
-            </Route>
-            <Route path="/festivals">
-              <MyFestivals />
-            </Route>
-            <Route path="/profile">
-              <Profile />
-            </Route>
-          </Switch>
-        </div>
-      </AppProvider>
-  )
+    <div>
+      <NavBar logout={logout} />
+      <Switch>
+        <Route
+          path="/login"
+          render={() => (currentUser ? <Redirect to="/" /> : <Login />)}
+        />
+        <Route path="/signup">{currentUser ? null : <SignupForm />}</Route>
+        <Route exact path="/">
+          <Dashboard />
+        </Route>
+        <Route path="/favorites">
+          <FavoriteArtists />
+        </Route>
+        <Route path="/festivals">
+          <MyFestivals />
+        </Route>
+        <Route path="/profile">
+          <Profile />
+        </Route>
+      </Switch>
+    </div>
+  );
 }
 
 export default App;
