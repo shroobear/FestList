@@ -3,16 +3,8 @@ import AppContext from "./AppContext"
 
 const AppProvider = ({ children }) => {
 
-    const [currentUser, setCurrentUser] = useState({
-        username: "",
-        email: "",
-        first_name: "",
-        last_name: "",
-        userID: "",
-    })
-
+    const [currentUser, setCurrentUser] = useState(null);
     const [errorMessage, setErrorMessage] = useState("")
-
 
 
     const appContextValues = {
