@@ -396,7 +396,7 @@ class Attendees(Resource):
 api.add_resource(Attendees, "/v1/festivals/<int:id>/attendees")
 
 
-@app.route("/v1/festlist_login", methods=["GET", "POST"])
+@app.route("/v1/festlist_login", methods=["POST"])
 def festlist_login():
     data = request.get_json()
 
@@ -412,6 +412,18 @@ def festlist_login():
         else:
             return jsonify({"message": "Invalid login credentials"}), 401
     return "FestList Login Page"
+
+@app.route("/v1/check_session", methods=["GET"])
+def current_user():
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return {'error' : 'Unauthorized'}, 401
+    if user_id:
+        user = User.query.filter(User.id == user_id).first()
+        return jsonify(user_id=user.id, first_name=user.first_name, last_name=user.last_name, email=user.email, username=user.username), 200
+    
+    return {}, 204
 
 @app.route("/v1/spotify_login")
 def spotify_login():
