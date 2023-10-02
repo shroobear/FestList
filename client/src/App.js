@@ -14,16 +14,35 @@ const APILink = "http://localhost:5555"
 
 
 function App() {
+  const [user, setUser] = useState(null);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        fetch('/v1/check_session')
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then((data) => {
+                setUser(data);
+            })
+            .catch((error) => {
+                setError(error.toString());
+            });
+    }, []);
+    console.log(user)
   return (
       <AppProvider>
         <div>
           <NavBar />
           <Switch>
             <Route path = "/login">
-              <Login />
+              {user ? null : <Login />}
             </Route>
             <Route path = "/signup">
-              <SignupForm />
+              {user ? null : <SignupForm />}
             </Route>
             <Route exact path="/">
               <Dashboard />
