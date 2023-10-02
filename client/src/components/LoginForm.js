@@ -28,13 +28,13 @@ function LoginForm({ setUser }) {
         .then((res) => res.json())
         .then((data) => {
           if (data && data.user_id) {
-            sessionStorage.setItem("userID", String(data.user_id));
+            sessionStorage.setItem("user_id", String(data.user_id));
             sessionStorage.setItem("first_name", data.first_name);
             sessionStorage.setItem("last_name", data.last_name);
             sessionStorage.setItem("username", data.username);
             sessionStorage.setItem("email", data.email);
             const user = {
-              userID: data.user_id,
+              user_id: data.user_id,
               first_name: data.first_name,
               last_name: data.last_name,
               username: data.username,
