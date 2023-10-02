@@ -1,13 +1,15 @@
 .navBar-container {
     position: fixed;
+    box-sizing: border-box;
+    height: 70px;
     top: 0;
     left: 0;
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-around;
     background-color: black;
-    padding: 0.5em 2em;
+    padding: 1em;
     z-index: 9999;
     margin-bottom: 2rem;
   }
@@ -18,14 +20,15 @@
   }
   
   .navbar-links {
-    flex-grow: 1;
     display: flex;
+    flex-grow: 1;
     justify-content: space-between;
   }
   
   .navbar-links ul {
+    width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     list-style: none;
     margin: 0;
@@ -55,7 +58,6 @@
     flex-direction: column;
     align-items: center;
     margin-top: 1rem;
-    background-color: white;
     padding: 1rem 2rem 2rem 2rem;
     border-radius: 8px;
   }
