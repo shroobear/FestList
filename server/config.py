@@ -23,7 +23,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SPOTIFY_CLIENT_SECRET'] = os.getenv("CLIENT_SECRET")
 app.config['SPOTIFY_CLIENT_ID'] = os.getenv("CLIENT_ID")
 app.config['SESSION_COOKIE_NAME'] = 'Spotify OAuth cookie'
+app.config['SESSION_COOKIE_SECURE'] = True
 app.json.compact = False
+FRONTEND_BASE_URL = "http://localhost:3000"
 
 # Define metadata, instantiate db
 metadata = MetaData(naming_convention={
