@@ -12,6 +12,8 @@ import AppProvider from "./context/AppProvider";
 import { Redirect } from "react-router-dom/cjs/react-router-dom.min";
 import AppContext from "./context/AppContext";
 import Festivals from "./components/Festivals";
+import NewFestivalForm from "./components/NewFestivalForm";
+import EditFestival from "./components/EditFestival";
 
 const APILink = "http://localhost:5555";
 
@@ -58,11 +60,17 @@ function App() {
         <Route path="/favorites">
           <FavoriteArtists />
         </Route>
-        <Route path="/festivals">
+        <Route exact path="/festivals">
           <Festivals />
         </Route>
         <Route path="/profile">
           <Profile />
+        </Route>
+        <Route exact path="/festivals/new">
+          <NewFestivalForm />
+        </Route>
+        <Route path="/festivals/:festival_id/edit">
+          <EditFestival />
         </Route>
       </Switch>
     </div>
