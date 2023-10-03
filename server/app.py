@@ -202,16 +202,17 @@ class Festivals(Resource):
         return Routing.get_all(self, Festival, plural_festival_schema)
 
     def post(self):
-        date_str = request.form["date"]
+        date_str = request.json["date"]
         date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
 
         new_festival = Festival(
-            name=request.form["name"],
-            address=request.form["address"],
-            city=request.form["city"],
-            state=request.form["state"],
+            name=request.json["name"],
+            address=request.json["address"],
+            city=request.json["city"],
+            state=request.json["state"],
             date=date_obj,
-            website=request.form["website"],
+            website=request.json.get("website", ""),
+            user_id=session['user_id']
         )
         db.session.add(new_festival)
         db.session.commit()
@@ -260,7 +261,7 @@ class Artists(Resource):
         return Routing.get_all(self, Artist, plural_artist_schema)
 
     def post(self):
-        new_artist = Artist(name=request.form["name"])
+        new_artist = Artist(name=request.json["name"])
         db.session.add(new_artist)
         db.session.commit()
 
@@ -324,7 +325,7 @@ class Songs(Resource):
         return Routing.get_all(self, Song, plural_song_schema)
 
     def post(self):
-        new_song = Song(name=request.form["name"])
+        new_song = Song(name=request.json["name"])
         db.session.add(new_song)
         db.session.commit()
 
