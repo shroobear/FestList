@@ -10,7 +10,7 @@
     justify-content: space-around;
     background-color: black;
     padding: 1em;
-    z-index: 9999;
+    z-index: 9900;
     margin-bottom: 2rem;
   }
   
@@ -74,7 +74,8 @@
     border-radius: 8px;
   }
 
-  .custom-row {
-    margin-left: 0;
-    margin-right: 0;
+  .page-header {
+    display: flex;
+    justify-content: center;
+    color: white;
   }
