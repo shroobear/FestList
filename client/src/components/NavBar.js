@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { NavLink } from "react-router-dom";
 import AppContext from "../context/AppContext";
+import { Button } from "react-bootstrap"
 
 function NavBar({ logout }) {
     const { currentUser } = useContext(AppContext);
@@ -26,9 +27,9 @@ function NavBar({ logout }) {
                     </li>
                     <li>
                         {currentUser !== null ? (
-                            <button onClick={logout}>
+                            <Button variant="primary" onClick={logout}>
                                 Logout
-                            </button>
+                            </Button>
                         ) : (
                             <NavLink exact to="/login">
                                 Login
