@@ -38,7 +38,7 @@ function App() {
         setCurrentUser(data);
       })
       .catch((error) => {
-        setErrorMessage(errorMessage.toString());
+        setErrorMessage(error.toString());
       });
   }, []);
   console.log("currentUser from useEffect", currentUser);
