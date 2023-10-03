@@ -51,7 +51,7 @@ function ArtistSearch() {
   return (
     <div className="ArtistSearch">
       <Container>
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit} autoComplete="off">
           <InputGroup className="my-3" size="lg">
             <Form.Control
               name="artistSearch"
@@ -67,6 +67,7 @@ function ArtistSearch() {
               onClick={() => {
                 fetchArtists(searchInput);
               }}
+              type="submit"
             >
               Search
             </Button>
@@ -95,7 +96,7 @@ function ArtistSearch() {
                 }
               />
               <Card.Body className="d-flex justify-content-center align-items-center">
-                <div>
+                <div className="mb-3">
                   <Button
                     href={artist.external_urls["spotify"]}
                     target="_blank"
