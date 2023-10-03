@@ -5,14 +5,14 @@ from random import randint, choice as rc
 
 # Remote library imports
 from faker import Faker
-from alive_progress import alive_bar, alive_it
-from flask_bcrypt import bcrypt
+from alive_progress import alive_bar, config_handler
 
 # Local imports
 from app import app
 from models import db, User, Festival, Artist, Lineup, Song, Song_Artist, User_Festival, Favorite
-from artists import artists, artist_top_songs_dict
+from artists import artist_top_songs_dict
 
+config_handler.set_global(theme='musical', spinner_length=15)
 
 fake = Faker()
 
@@ -24,8 +24,8 @@ def clear_table(table_class):
 def seed_users():
     print("\nSeeding Users 👥\n")
     Faker.seed(0)
-    with alive_bar(50) as bar:
-        for i in range (50):
+    with alive_bar(54) as bar:
+        for i in range (54):
             user = fake.simple_profile()
             new_user = User(
                 first_name = fake.first_name(),
@@ -40,7 +40,7 @@ def seed_users():
         db.session.commit()
 
 def seed_festivals():
-    print('\nseeding festivals 🧑‍🎤 \n')
+    print('\nSeeding festivals 🎪 \n')
     Faker.seed(0)
     with alive_bar(25) as bar:
         for i in range(25):
@@ -57,14 +57,14 @@ def seed_festivals():
         db.session.commit()
 
 def seed_lineups():
-    print('\ncreating lineups... ✨\n')
+    print('\nCreating lineups ✨\n')
     Faker.seed(0)
     lineup_pairs = set()
-    num_lineups = 750
+    num_lineups = 500
     with alive_bar(num_lineups) as bar:
         while len(lineup_pairs) < num_lineups:
             festival_id = randint(1, 25)
-            artist_id = randint(1, 500)
+            artist_id = randint(1, 178)
 
             pair = (festival_id, artist_id)
 
@@ -79,10 +79,10 @@ def seed_favorites():
     print('\nAssigning Favorites 💖\n')
     Faker.seed(0)
     favorite_artists = set()
-    with alive_bar(2000) as bar:
-        while len(favorite_artists) < 2000:
-            user_id = randint(1, 50)
-            artist_id = randint(1, 500)
+    with alive_bar(1500) as bar:
+        while len(favorite_artists) < 1500:
+            user_id = randint(1, 54)
+            artist_id = randint(1, 178)
 
             pair = (user_id, artist_id)
             if pair not in favorite_artists:
@@ -100,7 +100,7 @@ def seed_rsvps():
     sold_tickets = set()
     with alive_bar(300) as bar:
         while len(sold_tickets) < 300:
-            user_id = randint(1,50)
+            user_id = randint(1, 54)
             festival_id = randint(1, 25)
             pair = (user_id, festival_id)
             if pair not in sold_tickets:
@@ -125,7 +125,6 @@ def seed_songs_and_artists():
                 db.session.add(artist)
                 bar()
 
-            # Commit the artist to the database
             db.session.commit()
 
             # Loop through the songs of the artist
@@ -138,7 +137,6 @@ def seed_songs_and_artists():
                     db.session.add(song)
                     bar()
 
-                # Commit the song to the database
                 db.session.commit()
 
                 # Check if the artist-song association already exists in the database
@@ -148,7 +146,6 @@ def seed_songs_and_artists():
                     db.session.add(song_artist_association)
                     bar()
 
-                    # Commit the association to the database
                 db.session.commit()
 
 
