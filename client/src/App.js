@@ -11,6 +11,7 @@ import { SignupForm } from "./components/Signup";
 import AppProvider from "./context/AppProvider";
 import { Redirect } from "react-router-dom/cjs/react-router-dom.min";
 import AppContext from "./context/AppContext";
+import Festivals from "./components/Festivals";
 
 const APILink = "http://localhost:5555";
 
@@ -58,7 +59,7 @@ function App() {
           <FavoriteArtists />
         </Route>
         <Route path="/festivals">
-          <MyFestivals />
+          <Festivals />
         </Route>
         <Route path="/profile">
           <Profile />
