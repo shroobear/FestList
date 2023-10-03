@@ -85,6 +85,7 @@ class ArtistSchema(ma.SQLAlchemySchema):
 
     id = ma.auto_field()
     name = ma.auto_field()
+    spotify_id = ma.auto_field()
 
     url = ma.Hyperlinks(
         {
@@ -515,6 +516,8 @@ def refresh_spotify_token():
     session['token'] = token_info['access_token']
 
     return True
+
+@app.route("/v1/artists/<int:id>/top_songs")
 
 @app.route("/v1/logout")
 def logout():
