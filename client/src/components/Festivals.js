@@ -3,15 +3,15 @@ import ArtistSearch from "./ArtistSearch";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Button, Form, Card, Row, Container } from "react-bootstrap";
 import LineupModal from "./LineupModal";
+import { useHistory } from "react-router-dom";
 
 function Festivals() {
+  const history = useHistory()
   const [festivals, setFestivals] = useState([]);
   const [lineup, setLineup] = useState([]);
   const [show, setShow] = useState(false);
   const [currentFestival, setCurrentFestival] = useState(null);
-  const [filterType, setFilterType] = useState("");
-  const [filterValue, setFilterValue] = useState("");
-  const [filteredFestivals, setFilteredFestivals] = useState([])
+  const [filteredFestivals, setFilteredFestivals] = useState([]);
 
   useEffect(() => {
     fetch("/v1/festivals")
@@ -34,17 +34,23 @@ function Festivals() {
 
   useEffect(() => {
     setFilteredFestivals(festivals);
-  }, [festivals])
+  }, [festivals]);
 
   function handleStateChange(e) {
     const selectedState = e.target.value;
 
     if (selectedState === "") {
-        setFilteredFestivals(festivals);
+      setFilteredFestivals(festivals);
     } else {
-        const newStateFilteredFestivals = festivals.filter(festival => festival.state === selectedState);
-        setFilteredFestivals(newStateFilteredFestivals)
+      const newStateFilteredFestivals = festivals.filter(
+        (festival) => festival.state === selectedState
+      );
+      setFilteredFestivals(newStateFilteredFestivals);
     }
+  }
+
+  const handleNewFestival = () => {
+    history.push(`/festivals/new`)
   }
 
   return (
@@ -57,7 +63,8 @@ function Festivals() {
               <Form.Label>Select State</Form.Label>
               <Form.Select
                 size="sm"
-                onChange={(e) => {handleStateChange(e)
+                onChange={(e) => {
+                  handleStateChange(e);
                 }}
               >
                 <option value="">Choose...</option>
@@ -70,7 +77,7 @@ function Festivals() {
             </Form.Group>
           </Card>
 
-          <Row xs={1} md={2} className="justify-content-center gap-3">
+          <Row xs={1} md={2} className="justify-content-center  gap-3">
             {filteredFestivals.map((festival) => (
               <Card
                 data-bs-theme="dark"
@@ -98,6 +105,9 @@ function Festivals() {
             ))}
           </Row>
         </Container>
+        <Container className="d-flex mt-3 justify-content-center align-items-center">
+          <Button size="lg" onClick={(handleNewFestival)}>Create New Festival</Button>
+        </Container>
       </div>
       <LineupModal
         show={show}
@@ -106,8 +116,6 @@ function Festivals() {
         lineup={lineup}
         setLineup={setLineup}
       />
-      <ArtistSearch />
-      <button>Create New Festival</button>
     </main>
   );
 }
