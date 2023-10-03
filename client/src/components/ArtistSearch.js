@@ -8,6 +8,7 @@ import {
   Row,
   Card,
 } from "react-bootstrap";
+import "../App.css";
 
 function ArtistSearch() {
   const [searchInput, setSearchInput] = useState("");
@@ -51,7 +52,7 @@ function ArtistSearch() {
     <div className="ArtistSearch">
       <Container>
         <Form onSubmit={handleSubmit}>
-          <InputGroup className="mb-3" size="lg">
+          <InputGroup className="my-3" size="lg">
             <Form.Control
               name="artistSearch"
               placeholder="Search for Artist"
@@ -61,7 +62,7 @@ function ArtistSearch() {
               onChange={(e) => setSearchInput(e.target.value)}
             />
             <Button
-              variant="outline-secondary"
+              variant="dark"
               id="search-button"
               onClick={() => {
                 fetchArtists(searchInput);
@@ -73,12 +74,45 @@ function ArtistSearch() {
         </Form>
       </Container>
       <Container>
-        <Row className="mx-2 row row-cols-4">
+        <Row xs={1} md={2} className="g-2 justify-content-center gap-3">
           {artists.map((artist) => (
-            <Card key={artist.id}>
-              <Card.Img src={artist.images[0]?.url || "#"} />
-              <Card.Body>
-                <Card.Title>{artist.name}</Card.Title>
+            <Card
+              key={artist.id}
+              style={{ width: "20rem", height: "30rem" }}
+              bg="dark"
+              className="my-auto text-center"
+            >
+              <Card.Img
+                variant="top"
+                style={{
+                  maxHeight: "80%",
+                  objectFit: "cover",
+                  padding: "10px",
+                }}
+                src={
+                  artist.images[0]?.url ||
+                  "https://assets.simpleviewinc.com/simpleview/image/upload/c_fill,f_jpg,h_640,q_65,w_640/v1/clients/springfield/Concerts_Live_Music_d30b0459-d42e-424b-8ccf-31419a06694d.jpg"
+                }
+              />
+              <Card.Body className="d-flex justify-content-center align-items-center">
+                <div>
+                  <Button
+                    href={artist.external_urls["spotify"]}
+                    target="_blank"
+                    text="white"
+                    variant="primary"
+                    className="mb-3"
+                  >
+                    {artist.name}
+                  </Button>{" "}
+                  <br />
+                  <Button variant="outline-light" size="sm">
+                    Add to Festival
+                  </Button>{" "}
+                  <Button variant="outline-light" size="sm">
+                    Add to Favorites
+                  </Button>
+                </div>
               </Card.Body>
             </Card>
           ))}
