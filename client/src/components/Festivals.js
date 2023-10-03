@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ArtistSearch from "./ArtistSearch";
 import "bootstrap/dist/css/bootstrap.min.css";
-import {
-  Button,
-  Form,
-  Card,
-  Row,
-  Container
-} from "react-bootstrap";
+import { Button, Form, Card, Row, Container } from "react-bootstrap";
 import LineupModal from "./LineupModal";
 
 function Festivals() {
@@ -15,6 +9,9 @@ function Festivals() {
   const [lineup, setLineup] = useState([]);
   const [show, setShow] = useState(false);
   const [currentFestival, setCurrentFestival] = useState(null);
+  const [filterType, setFilterType] = useState("");
+  const [filterValue, setFilterValue] = useState("");
+  const [filteredFestivals, setFilteredFestivals] = useState([])
 
   useEffect(() => {
     fetch("/v1/festivals")
@@ -29,18 +26,58 @@ function Festivals() {
     setCurrentFestival(festival);
   }
 
+  function getUniqueStates(festivals) {
+    return [...new Set(festivals.map((festival) => festival.state))];
+  }
+
+  const uniqueStates = getUniqueStates(festivals);
+
+  useEffect(() => {
+    setFilteredFestivals(festivals);
+  }, [festivals])
+
+  function handleStateChange(e) {
+    const selectedState = e.target.value;
+
+    if (selectedState === "") {
+        setFilteredFestivals(festivals);
+    } else {
+        const newStateFilteredFestivals = festivals.filter(festival => festival.state === selectedState);
+        setFilteredFestivals(newStateFilteredFestivals)
+    }
+  }
+
   return (
     <main>
       <div>
-          <Container>
-            <h1 className="page-header">Festivals</h1>
-            <Row xs={1} md={2} className="justify-content-center gap-3">
-              {festivals.map((festival) => (
+        <Container>
+          <h1 className="page-header">Festivals</h1>
+          <Card bg="dark" text="light" className="g-2 mx-3 my-3" width="20rem">
+            <Form.Group controlId="stateSelect">
+              <Form.Label>Select State</Form.Label>
+              <Form.Select
+                size="sm"
+                onChange={(e) => {handleStateChange(e)
+                }}
+              >
+                <option value="">Choose...</option>
+                {uniqueStates.map((state, index) => (
+                  <option key={index} value={state}>
+                    {state}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Card>
+
+          <Row xs={1} md={2} className="justify-content-center gap-3">
+            {filteredFestivals.map((festival) => (
               <Card
+                data-bs-theme="dark"
                 key={festival.id}
                 border="info"
-                className="my-2"
-                style={{ width: "20rem" }}
+                className="my-2 text-center"
+                style={{ width: "21rem" }}
               >
                 <Card.Header>{festival.date}</Card.Header>
                 <Card.Body>
@@ -59,8 +96,8 @@ function Festivals() {
                 </Card.Body>
               </Card>
             ))}
-            </Row>
-          </Container>
+          </Row>
+        </Container>
       </div>
       <LineupModal
         show={show}
