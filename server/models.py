@@ -27,6 +27,7 @@ class Artist(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
+    spotify_id = db.Column(db.String)
     # Many to many relationship with Festival through lineup table
     lineup = db.relationship('Lineup', cascade="all, delete", back_populates='artist')
     # Many to many relationship with Song through Song_Artist table

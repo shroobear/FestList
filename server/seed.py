@@ -11,6 +11,7 @@ from flask_bcrypt import bcrypt
 # Local imports
 from app import app
 from models import db, User, Festival, Artist, Lineup, Song, Song_Artist, User_Festival, Favorite
+from artists import artists, artist_top_songs_dict
 
 
 fake = Faker()
@@ -53,30 +54,6 @@ def seed_festivals():
             )
             bar()
             db.session.add(new_festival)
-        db.session.commit()
-
-def seed_artists():
-    print('\nseeding artists 🎶🎸🎹🎶\n')
-    Faker.seed(0)
-    with alive_bar(500) as bar:
-        for i in range(500):
-            new_artist = Artist(
-                name = str(' '.join(fake.words(nb=3))).title()
-            )
-            bar()
-            db.session.add(new_artist)
-        db.session.commit()
-
-def seed_songs():
-    print('\nSeeding Songs 🎧\n')
-    Faker.seed(0)
-    with alive_bar(1500) as bar:
-        for i in range(1500):
-            new_song = Song(
-                name = str(' '.join(fake.words(nb=5))).title()
-            )
-            bar()
-            db.session.add(new_song)
         db.session.commit()
 
 def seed_lineups():
@@ -136,40 +113,46 @@ def seed_rsvps():
                 bar()
         db.session.commit()
 
-def seed_song_artists():
-    print('\nWriting Music 📝🎼\n')
-    artist_songs = set()
-    
-    with alive_bar(2000) as bar:
-        for song_id in range(1, 1501):  
-            artist_id = randint(1, 500) 
-            pair = (artist_id, song_id) 
-            artist_songs.add(pair)
-            song_written = Song_Artist(
-                song_id=song_id,
-                artist_id=artist_id
-            )
-            db.session.add(song_written)
-            bar()
-    
-        while len(artist_songs) < 2000:
-            artist_id = randint(1, 500)
-            song_id = randint(1, 1500)
-            pair = (artist_id, song_id)
-            if pair not in artist_songs:
-                artist_songs.add(pair)
-                song_written = Song_Artist(
-                    song_id=song_id,
-                    artist_id=artist_id
-                )
-                db.session.add(song_written)
+def seed_songs_and_artists():
+    print("\nseeding Artists, Songs, and relationships 🧑‍🎤🎶📝✨🥁\n")
+    with alive_bar(3683) as bar:
+        for artist_name, artist_data in artist_top_songs_dict.items():
+            
+            # Check if the artist already exists in the database
+            artist = Artist.query.filter_by(name=artist_name).first()
+            if not artist:
+                artist = Artist(name=artist_name, spotify_id=artist_data["spotify_id"])
+                db.session.add(artist)
                 bar()
-        
-    db.session.commit()
+
+            # Commit the artist to the database
+            db.session.commit()
+
+            # Loop through the songs of the artist
+            for song_name, song_spotify_id in artist_data["songs"].items():
+                
+                # Check if the song already exists in the database
+                song = Song.query.filter_by(name=song_name).first()
+                if not song:
+                    song = Song(name=song_name, spotify_id=song_spotify_id)
+                    db.session.add(song)
+                    bar()
+
+                # Commit the song to the database
+                db.session.commit()
+
+                # Check if the artist-song association already exists in the database
+                song_artist_association = Song_Artist.query.filter_by(song_id=song.id, artist_id=artist.id).first()
+                if not song_artist_association:
+                    song_artist_association = Song_Artist(song_id=song.id, artist_id=artist.id)
+                    db.session.add(song_artist_association)
+                    bar()
+
+                    # Commit the association to the database
+                db.session.commit()
 
 
 def clear_all():
-    clear_table(User)
     clear_table(Festival)
     clear_table(Artist)
     clear_table(Lineup)
@@ -185,11 +168,8 @@ if __name__ == '__main__':
         print("Starting seed...")
         # Seed code goes here!
         clear_all()
-        seed_users()
         seed_festivals()
-        seed_artists()
         seed_lineups()
-        seed_songs()
         seed_favorites()
         seed_rsvps()
-        seed_song_artists()
+        seed_songs_and_artists()
