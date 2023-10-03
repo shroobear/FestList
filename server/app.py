@@ -409,6 +409,9 @@ def festlist_login():
 
         if user and user.authenticate(password) == True:
             session["user_id"] = user.id
+            if user.spotify_access_token and user.spotify_refresh_token:
+                session['spotify_token'] = user.spotify_access_token
+                session['spotify_refresh_token'] = user.spotify_refresh_token
             return jsonify(user_id=user.id, first_name=user.first_name, last_name=user.last_name, email=user.email, username=user.username), 200
         else:
             return jsonify({"message": "Invalid login credentials"}), 401
@@ -478,7 +481,7 @@ def search_artist():
     headers = {
         "Authorization": f"Bearer {session['spotify_token']}"
     }
-    response = requests.get(f"https://api.spotify.com/v1/search?q={query}&type=artist&limit=10", headers=headers)
+    response = requests.get(f"https://api.spotify.com/v1/search?q={query}&type=artist&limit=12", headers=headers)
 
     if response.status_code == 401:  # Token expired
         refreshed = refresh_spotify_token()
