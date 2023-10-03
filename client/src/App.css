@@ -46,11 +46,11 @@
   }
   
   .navbar-links a:hover {
-    color: lightgreen;
+    color: rgb(0, 218, 222);
   }
   
   .navbar-links a.active {
-    color: lightgreen;
+    color: rgb(241, 133, 25);
   }
 
   .form-container {
@@ -72,4 +72,9 @@
     padding: 1rem 2rem 2rem 2rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     border-radius: 8px;
+  }
+
+  .custom-row {
+    margin-left: 0;
+    margin-right: 0;
   }
