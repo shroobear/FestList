@@ -50,7 +50,8 @@ def seed_festivals():
                 city = fake.city(),
                 state = fake.state_abbr(),
                 date = fake.date_this_decade(before_today=False, after_today=True),
-                website = fake.domain_name()
+                website = fake.domain_name(),
+                user_id = randint(1, 54)
             )
             bar()
             db.session.add(new_festival)

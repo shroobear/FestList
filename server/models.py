@@ -17,6 +17,10 @@ class Festival(db.Model):
     state = db.Column(db.String, nullable=False)
     date = db.Column(db.Date, nullable=False)
     website = db.Column(db.String)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    # One to many relationship for creator of festival
+    creator = db.relationship('User', backref='festivals')
     # Many to many relationship with Artist through lineups table
     lineup = db.relationship('Lineup', cascade="all, delete", back_populates='festival')
 
