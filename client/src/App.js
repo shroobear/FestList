@@ -1,25 +1,23 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useContext } from "react";
 import { Switch, Route, useHistory } from "react-router-dom";
 import "./App.css";
 import NavBar from "./components/NavBar";
 import Dashboard from "./components/Dashboard";
 import FavoriteArtists from "./components/ArtistSearch";
-import MyFestivals from "./components/MyFestivals";
 import Profile from "./components/Profile";
 import Login from "./components/Login";
 import { SignupForm } from "./components/Signup";
-import AppProvider from "./context/AppProvider";
 import { Redirect } from "react-router-dom/cjs/react-router-dom.min";
 import AppContext from "./context/AppContext";
 import Festivals from "./components/Festivals";
 import NewFestivalForm from "./components/NewFestivalForm";
 import EditFestival from "./components/EditFestival";
 
-const APILink = "http://localhost:5555";
+
 
 function App() {
   const history = useHistory();
-  const { currentUser, setCurrentUser, errorMessage, setErrorMessage } = useContext(AppContext);
+  const { currentUser, setCurrentUser, setErrorMessage } = useContext(AppContext);
   function logout() {
     sessionStorage.clear();
     fetch("/v1/logout");

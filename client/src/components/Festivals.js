@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import ArtistSearch from "./ArtistSearch";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Button, Form, Card, Row, Container } from "react-bootstrap";
 import LineupModal from "./LineupModal";

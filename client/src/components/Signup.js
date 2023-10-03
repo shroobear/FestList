@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { useFormik } from "formik";
 import * as yup from "yup";
-import AppContext from "../context/AppContext";
 
 export const SignupForm = () => {
   const [errorMessage, setErrorMessage] = useState("");
