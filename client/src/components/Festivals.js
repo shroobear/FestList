@@ -3,6 +3,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Button, Form, Card, Row, Container } from "react-bootstrap";
 import LineupModal from "./LineupModal";
 import { useHistory } from "react-router-dom";
+import FestivalFilter from "./FestivalFilter";
 
 function Festivals() {
   const history = useHistory()
@@ -57,24 +58,7 @@ function Festivals() {
       <div>
         <Container>
           <h1 className="page-header">Festivals</h1>
-          <Card bg="dark" text="light" className="g-2 mx-3 my-3" width="20rem">
-            <Form.Group controlId="stateSelect">
-              <Form.Label>Select State</Form.Label>
-              <Form.Select
-                size="sm"
-                onChange={(e) => {
-                  handleStateChange(e);
-                }}
-              >
-                <option value="">Choose...</option>
-                {uniqueStates.map((state, index) => (
-                  <option key={index} value={state}>
-                    {state}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Card>
+          <FestivalFilter onStateChange={handleStateChange} uniqueStates={uniqueStates}/>
 
           <Row xs={1} md={2} className="justify-content-center  gap-3">
             {filteredFestivals.map((festival) => (
