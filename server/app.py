@@ -6,7 +6,6 @@ from datetime import datetime
 # Remote library imports
 from flask import Flask, request, url_for, redirect, session, jsonify, make_response
 from flask_restful import Resource
-from flask_marshmallow import Marshmallow
 from sqlalchemy.orm import joinedload
 import requests
 from sqlalchemy import and_
@@ -15,8 +14,6 @@ from sqlalchemy import and_
 from config import app, db, api, oauth, bcrypt, host_port, FRONTEND_BASE_URL
 from helpers import Routing
 
-
-# Add your model imports
 from models import (
     User,
     Festival,
@@ -27,142 +24,35 @@ from models import (
     Favorite,
     Song_Artist,
 )
+from schemas import (
+    UserSchema,
+    FestivalSchema,
+    ArtistSchema,
+    SongSchema,
+    LineupSchema,
+    SongArtistSchema,
+    RSVPSchema,
+)
 
-
-ma = Marshmallow(app)
-
-
-# Views go here!
-class UserSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = User
-
-    id = ma.auto_field()
-    first_name = ma.auto_field()
-    last_name = ma.auto_field()
-    username = ma.auto_field()
-    email = ma.auto_field()
-
-    url = ma.Hyperlinks(
-        {
-            "self": ma.URLFor("userbyid", values=dict(id="<id>")),
-            "collection": ma.URLFor("users"),
-        }
-    )
 
 
 singular_user_schema = UserSchema()
 plural_user_schema = UserSchema(many=True)
-
-
-class FestivalSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = Festival
-
-    id = ma.auto_field()
-    name = ma.auto_field()
-    address = ma.auto_field()
-    city = ma.auto_field()
-    state = ma.auto_field()
-    date = ma.auto_field()
-    website = ma.auto_field()
-    url = ma.Method("generate_urls")
-
-    def generate_urls(self, obj):
-        return {
-            "self": f"/v1/festivals/{obj.id}",
-            "collection": "/v1/festivals",
-            "lineup": f"/v1/festivals/{obj.id}/lineup",
-        }
-
-
 singular_festival_schema = FestivalSchema()
 plural_festival_schema = FestivalSchema(many=True)
-
-
-class ArtistSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = Artist
-
-    id = ma.auto_field()
-    name = ma.auto_field()
-    spotify_id = ma.auto_field()
-
-    url = ma.Hyperlinks(
-        {
-            "self": ma.URLFor("artistbyid", values=dict(id="<id>")),
-            "collection": ma.URLFor("artists"),
-        }
-    )
-
-
 singular_artist_schema = ArtistSchema()
 plural_artist_schema = ArtistSchema(many=True)
-
-
-class SongSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = Song
-
-    id = ma.auto_field()
-    name = ma.auto_field()
-
-    url = ma.Hyperlinks(
-        {
-            "self": ma.URLFor("songbyid", values=dict(id="<id>")),
-            "collection": ma.URLFor("artists"),
-        }
-    )
-
-
 singular_song_schema = SongSchema()
 plural_song_schema = SongSchema(many=True)
-
-
-class LineupSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = Lineup
-
-    artist_id = ma.auto_field()
-    festival_id = ma.auto_field()
-
-    url = ma.Hyperlinks(
-        {
-            "self": ma.URLFor("lineupbyid", values=dict(id="<id>")),
-            "collection": ma.URLFor("lineups"),
-        }
-    )
-
-
 singular_lineup_schema = LineupSchema()
 plural_lineup_schema = LineupSchema(many=True)
+singular_song_artist_schema = SongArtistSchema()
+plural_song_artist_schema = SongArtistSchema(many=True)
+singular_rsvp_schema = RSVPSchema()
+plural_rsvp_schema = RSVPSchema(many=True)
 
 
-class Index(Resource):
-    def get(self):
-        name = dict(session).get("display_name")
-        response_dict = {
-            "index": f"Welcome to the FestList API. Hello, {name}",
-            "endpoint directory": [
-                {
-                    "festivals": f"{host_port}/v1/festivals",
-                    "users": f"{host_port}/v1/users",
-                    "artists": f"{host_port}/v1/artists",
-                    "songs": f"{host_port}/v1/songs",
-                }
-            ],
-        }
-
-        response = make_response(
-            response_dict,
-            200,
-        )
-
-        return response
-
-
-api.add_resource(Index, "/v1")
-
+# User Routes ------------------------------------------------------------
 
 class Users(Resource):
     def get(self):
@@ -197,11 +87,7 @@ class Users(Resource):
             return response
 
         return {"error": "422 Unprocessable Entity"}, 422
-
-
-api.add_resource(Users, "/v1/users")
-
-
+    
 class UserByID(Resource):
     def get(self, id):
         return Routing.get_by_id(self, id, User, singular_user_schema)
@@ -211,10 +97,9 @@ class UserByID(Resource):
 
     def delete(self, id):
         return Routing.delete_entry(self, id, User, "User")
+    
 
-
-api.add_resource(UserByID, "/v1/users/<int:id>")
-
+# Festival Routes ------------------------------------------------------------
 
 class Festivals(Resource):
     def get(self):
@@ -242,24 +127,139 @@ class Festivals(Resource):
         )
 
         return response
-
-
-api.add_resource(Festivals, "/v1/festivals")
-
-
+    
 class FestivalByID(Resource):
     def get(self, id):
         return Routing.get_by_id(self, id, Festival, singular_festival_schema)
 
     def patch(self, id):
-        return Routing.patch(self, id, Festival, singular_festival_schema)
+        festival = Festival.query.get(id)
+
+        if not festival:
+            return make_response({'message': 'Festival not found'}, 404)
+
+        data = request.get_json()
+
+        if 'name' in data:
+            festival.name = data['name']
+        if 'address' in data:
+            festival.address = data['address']
+        if 'city' in data:
+            festival.city = data['city']
+        if 'state' in data:
+            festival.state = data['state']
+        if 'date' in data:
+            date_str = data['date']
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+            festival.date = date_obj
+        if 'website' in data:
+            festival.website = data['website']
+
+        db.session.add(festival)
+        db.session.commit()
+
+        return make_response(singular_festival_schema.dump(festival), 200)
 
     def delete(self, id):
         return Routing.delete_entry(self, id, Festival, "Festival")
+    
+# Artist Routes ------------------------------------------------------------------------------
+
+class Artists(Resource):
+    def get(self):
+        return Routing.get_all(self, Artist, plural_artist_schema)
+
+    def post(self):
+        new_artist = Artist(
+            name=request.json["name"], spotify_id=request.json["spotify_id"]
+        )
+        db.session.add(new_artist)
+        db.session.commit()
+
+        response = make_response(
+            singular_artist_schema.dump(new_artist),
+            201,
+        )
+
+        return response
 
 
-api.add_resource(FestivalByID, "/v1/festivals/<int:id>")
+class ArtistByID(Resource):
+    def get(self, id):
+        return Routing.get_by_id(self, id, Artist, singular_artist_schema)
 
+    def patch(self, id):
+        return Routing.patch(self, id, Artist, singular_artist_schema)
+
+    def delete(self, id):
+        return Routing.delete_entry(self, id, Artist, "Artist")
+
+
+class ArtistByName(Resource):
+    def get(self, name):
+        artist = Artist.query.filter(Artist.name.ilike(name)).first()
+
+        if not artist:
+            return make_response({"message": "Entry not found"}, 404)
+
+        response = make_response(singular_artist_schema.dump(artist), 200)
+
+        return response
+    
+
+
+# Song Routes ------------------------------------------------------------
+class SongsByArtist(Resource):
+    def get(self, id):
+        songs_by_artist = Routing.get_relationship(
+            self, id, Song_Artist, "song", "artist_id"
+        )
+
+        songs = [entry.song for entry in songs_by_artist]
+
+        response = make_response(plural_song_schema.dump(songs), 200)
+
+        return response
+
+
+class Songs(Resource):
+    def get(self):
+        return Routing.get_all(self, Song, plural_song_schema)
+
+    def post(self):
+        new_song = Song(
+            name=request.json["name"],
+            spotify_id=request.json['spotify_id']
+            )
+        db.session.add(new_song)
+        db.session.commit()
+
+        response = make_response(singular_song_schema.dump(new_song), 201)
+
+        return response
+
+
+class SongByID(Resource):
+    def get(self, id):
+        return Routing.get_by_id(self, id, Song, singular_song_schema)
+
+    def patch(self, id):
+        return Routing.patch(self, id, Song, singular_song_schema)
+
+    def delete(self, id):
+        return Routing.delete_entry(self, id, Song, "song")
+
+class SongBySpotifyId(Resource):
+    def get(self, spotify_id):
+        song = Song.query.filter(Song.spotify_id == spotify_id).first()
+        if not song:
+            return make_response({"message": "Song not Found"}, 404)
+        
+        response = make_response(singular_artist_schema.dump(song), 200)
+
+        return response
+ 
+# Lineup Routes ----------------------------------------------------------
 
 class LineupByFestival(Resource):
     def get(self, id):
@@ -270,8 +270,6 @@ class LineupByFestival(Resource):
         response = make_response(plural_artist_schema.dump(artists), 200)
 
         return response
-
-
 
 class Lineups(Resource):
     def get(self):
@@ -294,6 +292,17 @@ class LineupByPair(Resource):
 
         return response
     
+    def delete(self, festival_id, artist_id):
+        lineup_pair = Lineup.query.filter(and_(Lineup.festival_id == festival_id, Lineup.artist_id == artist_id)).first()
+
+        if not lineup_pair:
+            return ({"message": "Lineup pair not found"}, 404)
+        
+        db.session.delete(lineup_pair)
+        db.session.commit()
+
+        return ({"message": "deletion successful"})
+    
     def post(self, festival_id, artist_id):
         existing_pair = Lineup.query.filter(and_(Lineup.festival_id == festival_id, Lineup.artist_id == artist_id)).first()
         if existing_pair:
@@ -305,69 +314,11 @@ class LineupByPair(Resource):
         )
         db.session.add(new_lineup)
         db.session.commit()
-
+        
         response = make_response(singular_lineup_schema.dump(new_lineup), 201)
         return response
 
-
-
-
-api.add_resource(LineupByPair, "/v1/lineups/pair/<int:festival_id>/<int:artist_id>")
-api.add_resource(Lineups, "/v1/lineups")
-api.add_resource(LineupById, "/v1/lineups/<int:id>")
-api.add_resource(LineupByFestival, "/v1/festivals/<int:id>/lineup")
-
-
-class Artists(Resource):
-    def get(self):
-        return Routing.get_all(self, Artist, plural_artist_schema)
-
-    def post(self):
-        new_artist = Artist(
-            name=request.json["name"], spotify_id=request.json["spotify_id"]
-        )
-        db.session.add(new_artist)
-        db.session.commit()
-
-        response = make_response(
-            singular_artist_schema.dump(new_artist),
-            201,
-        )
-
-        return response
-
-
-api.add_resource(Artists, "/v1/artists")
-
-
-class ArtistByID(Resource):
-    def get(self, id):
-        return Routing.get_by_id(self, id, Artist, singular_artist_schema)
-
-    def patch(self, id):
-        return Routing.patch(self, id, Artist, singular_artist_schema)
-
-    def delete(self, id):
-        return Routing.delete_entry(self, id, Artist, "Artist")
-
-
-api.add_resource(ArtistByID, "/v1/artists/<int:id>")
-
-
-class ArtistByName(Resource):
-    def get(self, name):
-        artist = Artist.query.filter(Artist.name.ilike(name)).first()
-
-        if not artist:
-            return make_response({"message": "Entry not found"}, 404)
-
-        response = make_response(singular_artist_schema.dump(artist), 200)
-
-        return response
-
-
-api.add_resource(ArtistByName, "/v1/artists/search/<string:name>")
-
+# Favorites Routes -----------------------------------------------------
 
 class Favorites(Resource):
     def get(self, id):
@@ -378,58 +329,8 @@ class Favorites(Resource):
         response = make_response(plural_artist_schema.dump(artists), 200)
 
         return response
-
-
-api.add_resource(Favorites, "/v1/users/<int:id>/favorites")
-
-
-class SongsByArtist(Resource):
-    def get(self, id):
-        songs_by_artist = Routing.get_relationship(
-            self, id, Song_Artist, "song", "artist_id"
-        )
-
-        songs = [entry.song for entry in songs_by_artist]
-
-        response = make_response(plural_song_schema.dump(songs), 200)
-
-        return response
-
-
-api.add_resource(SongsByArtist, "/v1/artists/<int:id>/songs")
-
-
-class Songs(Resource):
-    def get(self):
-        return Routing.get_all(self, Song, plural_song_schema)
-
-    def post(self):
-        new_song = Song(name=request.json["name"])
-        db.session.add(new_song)
-        db.session.commit()
-
-        response = make_response(singular_song_schema.dump(new_song), 201)
-
-        return response
-
-
-api.add_resource(Songs, "/v1/songs")
-
-
-class SongByID(Resource):
-    def get(self, id):
-        return Routing.get_by_id(self, id, Song, singular_song_schema)
-
-    def patch(self, id):
-        return Routing.patch(self, id, Song, singular_song_schema)
-
-    def delete(self, id):
-        return Routing.delete_entry(self, id, Song, "song")
-
-
-api.add_resource(SongByID, "/v1/songs/<int:id>")
-
-
+    
+# Song_Artist Routes -----------------------------------------------------------
 class ArtistsOfSong(Resource):
     def get(self, id):
         artists_by_song = Routing.get_relationship(
@@ -442,11 +343,67 @@ class ArtistsOfSong(Resource):
 
         return response
 
+class SongArtists(Resource):
+    def get(self):
+        return Routing.get_all(self, Song_Artist, plural_song_artist_schema)
 
-api.add_resource(ArtistsOfSong, "/v1/songs/<int:id>/artists")
+class SongArtistById(Resource):
+    def get(self, id):
+        return Routing.get_by_id(self, id, Song_Artist, singular_song_artist_schema)
 
 
-class FestivalRSVPs(Resource):
+class SongArtistByPair(Resource):
+    def get(self, artist_id, song_id):
+        check_pair = Song_Artist.query.filter(and_(Song_Artist.artist_id == artist_id), Song_Artist.song_id == song_id).first()
+
+        if not check_pair:
+            return ({"message": "Song_Artist pair not found"}, 404)
+        
+        response = make_response(singular_song_artist_schema.dump(check_pair), 200)
+
+        return response
+    
+    def post(self, artist_id, song_id):
+        existing_pair = Song_Artist.query.filter(and_(Song_Artist.artist_id == artist_id), Song_Artist.song_id == song_id)
+
+        if existing_pair:
+            return {"message": "This song_artist pair already exists"}, 400
+        
+        new_song_artist = Song_Artist(
+            song_id=song_id,
+            artist_id=artist_id
+        )
+        db.session.add(new_song_artist)
+        db.session.commit()
+
+        response = make_response(singular_song_artist_schema.dump(new_song_artist), 201)
+        return response
+
+# RSVP Routes
+
+class RSVPsById(Resource):
+    def get(self, id):
+        return Routing.get_by_id(self, id, User_Festival, singular_rsvp_schema)
+
+class RSVPs(Resource):
+    def get(self):
+        return Routing.get_all(self, User_Festival, plural_rsvp_schema)
+    
+    def post(self):
+        new_rsvp = User_Festival(
+            user_id = request.json['user_id'],
+            festival_id = request.json['festival_id']
+        )
+        db.session.add(new_rsvp)
+        db.session.commit()
+
+        response = make_response(singular_rsvp_schema.dump(new_rsvp), 201)
+        return response
+
+# Other Join Routes ----------------------------------------------------------------
+
+
+class UserRSVPs(Resource):
     def get(self, id):
         festival_rsvps = Routing.get_relationship(
             self, id, User_Festival, "festival", "user_id"
@@ -457,9 +414,6 @@ class FestivalRSVPs(Resource):
         response = make_response(plural_festival_schema.dump(festivals), 200)
 
         return response
-
-
-api.add_resource(FestivalRSVPs, "/v1/users/<int:id>/rsvps")
 
 
 class Attendees(Resource):
@@ -473,10 +427,61 @@ class Attendees(Resource):
         response = make_response(plural_user_schema.dump(users), 200)
 
         return response
+    
+class Index(Resource):
+    def get(self):
+        name = dict(session).get("display_name")
+        response_dict = {
+            "index": f"Welcome to the FestList API. Hello, {name}",
+            "endpoint directory": [
+                {
+                    "festivals": f"{host_port}/v1/festivals",
+                    "users": f"{host_port}/v1/users",
+                    "artists": f"{host_port}/v1/artists",
+                    "songs": f"{host_port}/v1/songs",
+                }
+            ],
+        }
 
+        response = make_response(
+            response_dict,
+            200,
+        )
 
+        return response
+
+class CreatedFestivals(Resource):
+    def get(self, user_id):
+        festivals = Festival.query.filter_by(user_id=user_id).all()
+
+        return make_response(plural_festival_schema.dump(festivals), 200)
+
+api.add_resource(Index, "/v1")
+api.add_resource(Users, "/v1/users")
+api.add_resource(UserByID, "/v1/users/<int:id>")
+api.add_resource(Festivals, "/v1/festivals")
+api.add_resource(FestivalByID, "/v1/festivals/<int:id>")
+api.add_resource(LineupByPair, "/v1/lineups/pair/<int:festival_id>/<int:artist_id>")
+api.add_resource(Lineups, "/v1/lineups")
+api.add_resource(LineupById, "/v1/lineups/<int:id>")
+api.add_resource(LineupByFestival, "/v1/festivals/<int:id>/lineup")
+api.add_resource(Artists, "/v1/artists")
+api.add_resource(ArtistByID, "/v1/artists/<int:id>")
+api.add_resource(ArtistByName, "/v1/artists/search/<string:name>")
+api.add_resource(Favorites, "/v1/users/<int:id>/favorites")
+api.add_resource(SongsByArtist, "/v1/artists/<int:id>/songs")
+api.add_resource(Songs, "/v1/songs")
+api.add_resource(SongByID, "/v1/songs/<int:id>")
+api.add_resource(SongBySpotifyId, "/v1/songs/search/<string:spotify_id>")
+api.add_resource(ArtistsOfSong, "/v1/songs/<int:id>/artists")
+api.add_resource(SongArtists, '/v1/song_artists')
+api.add_resource(SongArtistByPair, "/v1/song_artists/pair/<int:song_id>/<int:artist_id>")
+api.add_resource(SongArtistById, "/v1/song_artists/<int:id>")
+api.add_resource(UserRSVPs, "/v1/users/<int:id>/rsvps")
 api.add_resource(Attendees, "/v1/festivals/<int:id>/attendees")
-
+api.add_resource(RSVPs, "/v1/rsvps")
+api.add_resource(RSVPsById, "/v1/rsvps/<int:id>")
+api.add_resource(CreatedFestivals, "/v1/users/<int:user_id>/created_festivals")
 
 @app.route("/v1/festlist_login", methods=["POST"])
 def festlist_login():
@@ -510,6 +515,7 @@ def festlist_login():
 
 @app.route("/v1/check_session", methods=["GET"])
 def current_user():
+    print("Session data", session)
 
     user_id = session.get("user_id")
     if not user_id:
@@ -565,12 +571,12 @@ def authorize():
                 db.session.commit()
 
             print("User Info:", user_info)
-            return redirect(f"{FRONTEND_BASE_URL}/profile?linked=true")
+            return redirect(f"{FRONTEND_BASE_URL}/")
         else:
-            return "Authorization failed", 401
+            return {"Authorization failed", 401}
     except Exception as e:
         print(f"An error occurred: {e}")
-        return "An error occurred during authorization", 401
+        return {"error": str(e)}, 500
 
 
 @app.route("/v1/search_artist", methods=["POST"])
@@ -588,7 +594,7 @@ def search_artist():
         refreshed = refresh_spotify_token()
         if not refreshed:
             return jsonify({"error": "Token refresh failed"}), 401
-        headers["Authorization"] = f"Bearer {session['token']}"
+        headers["Authorization"] = f"Bearer {session['spotify_token']}"
         response = requests.get(
             f"https://api.spotify.com/v1/search?q={query}&type=artist&limit=12",
             headers=headers,
@@ -617,17 +623,47 @@ def refresh_spotify_token():
         return False
 
     token_info = response.json()
-    session["token"] = token_info["access_token"]
+    session["spotify_token"] = token_info["access_token"]
 
     return True
 
+@app.route("/v1/artist_top_tracks/<string:artist_spotify_id>", methods=["GET"])
+def get_artist_top_tracks(artist_spotify_id):
+    if 'spotify_token' not in session:
+        return {"error": "Spotify token not found in session. Please login again."}, 401
+
+    headers = {"Authorization": f"Bearer {session['spotify_token']}"}
+    response = requests.get(
+        f"https://api.spotify.com/v1/artists/{artist_spotify_id}/top-tracks?market=US",
+        headers=headers
+    )
+
+    if response.status_code == 401:  # Token expired
+        refreshed = refresh_spotify_token()
+        if not refreshed:
+            return jsonify({"error": "Token refresh failed"}), 401
+        headers["Authorization"] = f"Bearer {session['spotify_token']}"
+        response = requests.get(
+            f"https://api.spotify.com/v1/artists/{artist_spotify_id}/top-tracks?market=US",
+            headers=headers
+        )
+
+    if response.status_code != 200:
+        return jsonify({"error": "Failed to fetch data from Spotify"})
+
+    tracks = response.json().get("tracks", [])
+
+    
+
+    return jsonify(tracks)
+    
 
 
 @app.route("/v1/logout")
 def logout():
     for key in list(session.keys()):
         session.pop(key)
-    return make_response({"message": "User successfully logged out"}, 200)
+    return redirect("/v1")
 
 
 if __name__ == "__main__":
