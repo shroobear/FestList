@@ -515,8 +515,6 @@ def festlist_login():
 
 @app.route("/v1/check_session", methods=["GET"])
 def current_user():
-    print("Session data", session)
-
     user_id = session.get("user_id")
     if not user_id:
         return {"error": "No user ID found in the session"}, 401

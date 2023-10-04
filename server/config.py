@@ -22,7 +22,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SPOTIFY_CLIENT_SECRET'] = os.getenv("CLIENT_SECRET")
 app.config['SPOTIFY_CLIENT_ID'] = os.getenv("CLIENT_ID")
-app.config['SESSION_COOKIE_NAME'] = 'Spotify OAuth cookie'
+app.config['SESSION_COOKIE_NAME'] = 'Festlist User Cookie'
 app.config['SESSION_COOKIE_SECURE'] = True
 app.json.compact = False
 FRONTEND_BASE_URL = "http://localhost:3000"
@@ -56,7 +56,7 @@ spotify = oauth.register(
     authorize_params=None,
     api_base_url='https://api.spotify.com',
     userinfo_endpoint='https://api.spotify.com/v1/me',
-    client_kwargs={'scope': 'user-read-private, user-read-email'}
+    client_kwargs={'scope': 'user-read-private, user-read-email, playlist-modify-public'}
 )
 
 # Instantiate bcrypt

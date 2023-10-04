@@ -12,6 +12,7 @@ import AppContext from "./context/AppContext";
 import Festivals from "./components/Festivals";
 import NewFestivalForm from "./components/NewFestivalForm";
 import EditFestival from "./components/EditFestival";
+import MyFestivals from "./components/MyFestivals";
 
 
 
@@ -61,8 +62,8 @@ function App() {
         <Route exact path="/festivals">
           <Festivals />
         </Route>
-        <Route path="/profile">
-          <Profile />
+        <Route path="/myfestivals">
+          <MyFestivals />
         </Route>
         <Route exact path="/festivals/new">
           <NewFestivalForm />
