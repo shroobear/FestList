@@ -10,7 +10,7 @@ import {
 } from "react-bootstrap";
 import "../App.css";
 
-function ArtistSearch() {
+function ArtistSearch(props) {
   const [searchInput, setSearchInput] = useState("");
   const [artists, setArtists] = useState([]);
 
@@ -24,25 +24,36 @@ function ArtistSearch() {
   };
 
   const fetchArtists = async (query) => {
-    try {
-      const response = await fetch(`/v1/search_artist`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query }),
-      });
+    if (query !== "")
+      try {
+        const response = await fetch(`/v1/search_artist`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query }),
+        });
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+
+        const data = await response.json();
+        setArtists(data);
+      } catch (error) {
+        console.error("There was an error fetching the artists", error);
       }
-
-      const data = await response.json();
-      setArtists(data);
-    } catch (error) {
-      console.error("There was an error fetching the artists", error);
-    }
+    else console.error("Query cannot be empty")
   };
+
+  function handleAddToFestivalClick(artist) {
+    const artistData = {
+      name: artist.name,
+      id: artist.id
+    }
+    console.log(artistData)
+    props.onAddToFestival(artistData, props.festival_id)
+  }
 
   useEffect(() => {
     console.log(artists);
@@ -107,11 +118,8 @@ function ArtistSearch() {
                     {artist.name}
                   </Button>{" "}
                   <br />
-                  <Button variant="outline-light" size="sm">
+                  <Button variant="outline-light" size="sm" onClick={() => handleAddToFestivalClick(artist)}>
                     Add to Festival
-                  </Button>{" "}
-                  <Button variant="outline-light" size="sm">
-                    Add to Favorites
                   </Button>
                 </div>
               </Card.Body>
