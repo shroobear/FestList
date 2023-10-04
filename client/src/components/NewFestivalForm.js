@@ -5,6 +5,7 @@ import { useFormik } from "formik";
 import { Container, Form, Button, Alert } from "react-bootstrap";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { usStates } from "./helpers";
 
 function NewFestivalForm() {
   const history = useHistory();
@@ -59,59 +60,6 @@ function NewFestivalForm() {
     },
   });
 
-  const usStates = [
-    "AL",
-    "AK",
-    "AZ",
-    "AR",
-    "CA",
-    "CO",
-    "CT",
-    "DE",
-    "FL",
-    "GA",
-    "HI",
-    "ID",
-    "IL",
-    "IN",
-    "IA",
-    "KS",
-    "KY",
-    "LA",
-    "ME",
-    "MD",
-    "MA",
-    "MI",
-    "MN",
-    "MS",
-    "MO",
-    "MT",
-    "NE",
-    "NV",
-    "NH",
-    "NJ",
-    "NM",
-    "NY",
-    "NC",
-    "ND",
-    "OH",
-    "OK",
-    "OR",
-    "PA",
-    "RI",
-    "SC",
-    "SD",
-    "TN",
-    "TX",
-    "UT",
-    "VT",
-    "VA",
-    "WA",
-    "WV",
-    "WI",
-    "WY",
-  ];
-
   return (
     <main>
       <Container>
@@ -127,7 +75,7 @@ function NewFestivalForm() {
         )}
         <Form
           className="align-content-center justify-content-center"
-          style={{ width: "50%", margin: "auto" }}
+          style={{ width: "20rem", margin: "auto" }}
           onSubmit={formik.handleSubmit}
         >
           <Form.Group className="form">
