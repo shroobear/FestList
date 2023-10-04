@@ -133,7 +133,32 @@ class FestivalByID(Resource):
         return Routing.get_by_id(self, id, Festival, singular_festival_schema)
 
     def patch(self, id):
-        return Routing.patch(self, id, Festival, singular_festival_schema)
+        festival = Festival.query.get(id)
+
+        if not festival:
+            return make_response({'message': 'Festival not found'}, 404)
+
+        data = request.get_json()
+
+        if 'name' in data:
+            festival.name = data['name']
+        if 'address' in data:
+            festival.address = data['address']
+        if 'city' in data:
+            festival.city = data['city']
+        if 'state' in data:
+            festival.state = data['state']
+        if 'date' in data:
+            date_str = data['date']
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+            festival.date = date_obj
+        if 'website' in data:
+            festival.website = data['website']
+
+        db.session.add(festival)
+        db.session.commit()
+
+        return make_response(singular_festival_schema.dump(festival), 200)
 
     def delete(self, id):
         return Routing.delete_entry(self, id, Festival, "Festival")
@@ -266,6 +291,17 @@ class LineupByPair(Resource):
         response = make_response(singular_lineup_schema.dump(lineup), 200)
 
         return response
+    
+    def delete(self, festival_id, artist_id):
+        lineup_pair = Lineup.query.filter(and_(Lineup.festival_id == festival_id, Lineup.artist_id == artist_id)).first()
+
+        if not lineup_pair:
+            return ({"message": "Lineup pair not found"}, 404)
+        
+        db.session.delete(lineup_pair)
+        db.session.commit()
+
+        return ({"message": "deletion successful"})
     
     def post(self, festival_id, artist_id):
         existing_pair = Lineup.query.filter(and_(Lineup.festival_id == festival_id, Lineup.artist_id == artist_id)).first()
@@ -413,7 +449,12 @@ class Index(Resource):
         )
 
         return response
-    
+
+class CreatedFestivals(Resource):
+    def get(self, user_id):
+        festivals = Festival.query.filter_by(user_id=user_id).all()
+
+        return make_response(plural_festival_schema.dump(festivals), 200)
 
 api.add_resource(Index, "/v1")
 api.add_resource(Users, "/v1/users")
@@ -440,7 +481,7 @@ api.add_resource(UserRSVPs, "/v1/users/<int:id>/rsvps")
 api.add_resource(Attendees, "/v1/festivals/<int:id>/attendees")
 api.add_resource(RSVPs, "/v1/rsvps")
 api.add_resource(RSVPsById, "/v1/rsvps/<int:id>")
-
+api.add_resource(CreatedFestivals, "/v1/users/<int:user_id>/created_festivals")
 
 @app.route("/v1/festlist_login", methods=["POST"])
 def festlist_login():
@@ -530,7 +571,7 @@ def authorize():
                 db.session.commit()
 
             print("User Info:", user_info)
-            return redirect(f"{FRONTEND_BASE_URL}/profile?linked=true")
+            return redirect(f"{FRONTEND_BASE_URL}/")
         else:
             return {"Authorization failed", 401}
     except Exception as e:
