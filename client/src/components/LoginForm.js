@@ -56,7 +56,7 @@ function LoginForm({ setUser }) {
   return (
     <main>
       <div className="form-container">
-        <h1>Login</h1>
+        <h1 className="page-header">Login</h1>
         <form onSubmit={formik.handleSubmit} className="form">
           <label htmlFor="email">Email Address</label>
           <br />

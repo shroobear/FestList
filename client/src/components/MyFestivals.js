@@ -80,7 +80,7 @@ function MyFestivals() {
       <Container>
         <Row className="mb-4">
           <Col>
-            <h2>Festivals I'm Attending</h2>
+            <h2 className="page-header">Your RSVPs</h2>
             {rsvpedFestivals.map((festival) => (
               <Card key={festival.id} className="mb-3">
                 <Card.Body>
@@ -104,7 +104,7 @@ function MyFestivals() {
           </Col>
 
           <Col>
-            <h2>Festivals I Created</h2>
+            <h2 className="page-header">Your Festivals</h2>
             {createdFestivals.map((festival) => (
               <Card key={festival.id} className="mb-3">
                 <Card.Body>

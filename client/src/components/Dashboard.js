@@ -12,8 +12,8 @@ function Dashboard() {
       <Container>
         <Row className="mt-5 mb-3">
           <Col className="text-center">
-            <h1>Welcome to FestFinder!</h1>
-            <p>Discover and manage music festivals that fit your vibe.</p>
+            <h1 className="page-header">Welcome to FestList!</h1>
+            <p className="page-header">Discover and manage music festivals that fit your vibe.</p>
           </Col>
         </Row>
 
