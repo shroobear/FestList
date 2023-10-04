@@ -100,3 +100,17 @@ class SongArtistSchema(ma.SQLAlchemySchema):
             "collection": ma.URLFor("songartists"),
         }
     )
+
+class RSVPSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = User_Festival
+
+    user_id = ma.auto_field()
+    festival_id = ma.auto_field()
+
+    url = ma.Hyperlinks(
+        {
+            "self": ma.URLFor("rsvpsbyid", values=dict(id="<id>")),
+            "collection": ma.URLFor("rsvps"),
+        }
+    )
