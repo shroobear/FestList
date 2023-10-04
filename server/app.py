@@ -314,7 +314,7 @@ class LineupByPair(Resource):
         )
         db.session.add(new_lineup)
         db.session.commit()
-        
+
         response = make_response(singular_lineup_schema.dump(new_lineup), 201)
         return response
 
@@ -661,7 +661,7 @@ def get_artist_top_tracks(artist_spotify_id):
 def logout():
     for key in list(session.keys()):
         session.pop(key)
-    return redirect("/v1")
+    return make_response({"message": "User successfully logged out"}, 200)
 
 
 if __name__ == "__main__":
