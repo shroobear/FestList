@@ -20,7 +20,7 @@ function LineupModal({ show, setShow, currentFestival, lineup, setLineup }) {
   return (
     <main>
       <Modal
-        style={{ "z-index": "9999" }}
+        style={{ "zIndex": "9999" }}
         centered={true}
         show={show}
         size="lg"

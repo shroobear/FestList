@@ -62,7 +62,7 @@ function EditFestival() {
 
   return (
     <main>
-      <Container>
+      <Container style={{width: "20rem"}} className="align-content-center">
         <h1 className="page-header">
           {currentFestival ? currentFestival.name : "Loading..."}
         </h1>
@@ -75,7 +75,7 @@ function EditFestival() {
                   <li key={artist.id}>{artist.name}</li>  
                 ))}
             </ul>
-            <Button variant="outline-danger" className="mb-2">Edit Lineup</Button>
+            <Button variant="outline-danger" className="mb-2" >Edit Lineup</Button>
           </Card>
         </Row>
       </Container>
