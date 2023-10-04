@@ -9,6 +9,7 @@ from flask_restful import Resource
 from flask_marshmallow import Marshmallow
 from sqlalchemy.orm import joinedload
 import requests
+from sqlalchemy import and_
 
 # Local imports
 from config import app, db, api, oauth, bcrypt, host_port, FRONTEND_BASE_URL
@@ -118,6 +119,25 @@ singular_song_schema = SongSchema()
 plural_song_schema = SongSchema(many=True)
 
 
+class LineupSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = Lineup
+
+    artist_id = ma.auto_field()
+    festival_id = ma.auto_field()
+
+    url = ma.Hyperlinks(
+        {
+            "self": ma.URLFor("lineupbyid", values=dict(id="<id>")),
+            "collection": ma.URLFor("lineups"),
+        }
+    )
+
+
+singular_lineup_schema = LineupSchema()
+plural_lineup_schema = LineupSchema(many=True)
+
+
 class Index(Resource):
     def get(self):
         name = dict(session).get("display_name")
@@ -150,34 +170,33 @@ class Users(Resource):
 
     def post(self):
         data = request.get_json()
-        password = data['password']
-        username = data['username']
+        password = data["password"]
+        username = data["username"]
         new_user = User(
             username=username,
-            first_name = data['firstName'],
-            last_name = data['lastName'],
-            email = data['email']
+            first_name=data["firstName"],
+            last_name=data["lastName"],
+            email=data["email"],
         )
         new_user.password_hash = password
 
         if User.query.filter(User.username == new_user.username).first():
             return make_response({"message": "Username already taken"}, 409)
-        
+
         elif User.query.filter(User.email == new_user.email).first():
-            return make_response({"message": "An account already exists under that email"}, 409)
+            return make_response(
+                {"message": "An account already exists under that email"}, 409
+            )
 
         if username and password:
             db.session.add(new_user)
             db.session.commit()
 
-            response = make_response(
-                singular_user_schema.dump(new_user),
-                201
-            )
+            response = make_response(singular_user_schema.dump(new_user), 201)
 
             return response
-        
-        return {'error': '422 Unprocessable Entity'}, 422
+
+        return {"error": "422 Unprocessable Entity"}, 422
 
 
 api.add_resource(Users, "/v1/users")
@@ -212,7 +231,7 @@ class Festivals(Resource):
             state=request.json["state"],
             date=date_obj,
             website=request.json.get("website", ""),
-            user_id=session['user_id']
+            user_id=session["user_id"],
         )
         db.session.add(new_festival)
         db.session.commit()
@@ -242,7 +261,7 @@ class FestivalByID(Resource):
 api.add_resource(FestivalByID, "/v1/festivals/<int:id>")
 
 
-class FestivalLineup(Resource):
+class LineupByFestival(Resource):
     def get(self, id):
         lineup = Routing.get_relationship(self, id, Lineup, "artist", "festival_id")
 
@@ -253,7 +272,50 @@ class FestivalLineup(Resource):
         return response
 
 
-api.add_resource(FestivalLineup, "/v1/festivals/<int:id>/lineup")
+
+class Lineups(Resource):
+    def get(self):
+        return Routing.get_all(self, Lineup, plural_lineup_schema)
+
+
+class LineupById(Resource):
+    def get(self, id):
+        return Routing.get_by_id(self, id, Lineup, singular_lineup_schema)
+
+
+class LineupByPair(Resource):
+    def get(self, festival_id, artist_id):
+        lineup = Lineup.query.filter(and_(Lineup.festival_id == festival_id, Lineup.artist_id == artist_id)).first()
+
+        if not lineup:
+            return ({"message": "Lineup pair not found"}, 404)
+
+        response = make_response(singular_lineup_schema.dump(lineup), 200)
+
+        return response
+    
+    def post(self, festival_id, artist_id):
+        existing_pair = Lineup.query.filter(and_(Lineup.festival_id == festival_id, Lineup.artist_id == artist_id)).first()
+        if existing_pair:
+            return {"message": "This lineup pair already exists"}, 400
+
+        new_lineup = Lineup(
+            festival_id=festival_id,
+            artist_id=artist_id
+        )
+        db.session.add(new_lineup)
+        db.session.commit()
+        
+        response = make_response(singular_lineup_schema.dump(new_lineup), 201)
+        return response
+
+
+
+
+api.add_resource(LineupByPair, "/v1/lineups/pair/<int:festival_id>/<int:artist_id>")
+api.add_resource(Lineups, "/v1/lineups")
+api.add_resource(LineupById, "/v1/lineups/<int:id>")
+api.add_resource(LineupByFestival, "/v1/festivals/<int:id>/lineup")
 
 
 class Artists(Resource):
@@ -261,7 +323,9 @@ class Artists(Resource):
         return Routing.get_all(self, Artist, plural_artist_schema)
 
     def post(self):
-        new_artist = Artist(name=request.json["name"])
+        new_artist = Artist(
+            name=request.json["name"], spotify_id=request.json["spotify_id"]
+        )
         db.session.add(new_artist)
         db.session.commit()
 
@@ -288,6 +352,21 @@ class ArtistByID(Resource):
 
 
 api.add_resource(ArtistByID, "/v1/artists/<int:id>")
+
+
+class ArtistByName(Resource):
+    def get(self, name):
+        artist = Artist.query.filter(Artist.name.ilike(name)).first()
+
+        if not artist:
+            return make_response({"message": "Entry not found"}, 404)
+
+        response = make_response(singular_artist_schema.dump(artist), 200)
+
+        return response
+
+
+api.add_resource(ArtistByName, "/v1/artists/search/<string:name>")
 
 
 class Favorites(Resource):
@@ -404,34 +483,53 @@ def festlist_login():
     data = request.get_json()
 
     if request.method == "POST":
-        email = data['email']
-        password = data['password']
+        email = data["email"]
+        password = data["password"]
 
         user = User.query.filter_by(email=email).first()
 
         if user and user.authenticate(password) == True:
             session["user_id"] = user.id
             if user.spotify_access_token and user.spotify_refresh_token:
-                session['spotify_token'] = user.spotify_access_token
-                session['spotify_refresh_token'] = user.spotify_refresh_token
-            return jsonify(user_id=user.id, first_name=user.first_name, last_name=user.last_name, email=user.email, username=user.username), 200
+                session["spotify_token"] = user.spotify_access_token
+                session["spotify_refresh_token"] = user.spotify_refresh_token
+            return (
+                jsonify(
+                    user_id=user.id,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    email=user.email,
+                    username=user.username,
+                ),
+                200,
+            )
         else:
             return jsonify({"message": "Invalid login credentials"}), 401
     return "FestList Login Page"
+
 
 @app.route("/v1/check_session", methods=["GET"])
 def current_user():
     print("Session data:", session)
 
-    user_id = session.get('user_id')
+    user_id = session.get("user_id")
     if not user_id:
-        return {'error': 'No user ID found in the session'}, 401
+        return {"error": "No user ID found in the session"}, 401
 
     user = User.query.filter(User.id == user_id).first()
     if not user:
-        return {'error': f'No user found in the database with user ID: {user_id}'}, 404
+        return {"error": f"No user found in the database with user ID: {user_id}"}, 404
 
-    return jsonify(user_id=user.id, first_name=user.first_name, last_name=user.last_name, email=user.email, username=user.username), 200
+    return (
+        jsonify(
+            user_id=user.id,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            email=user.email,
+            username=user.username,
+        ),
+        200,
+    )
 
 
 @app.route("/v1/spotify_login")
@@ -458,13 +556,13 @@ def authorize():
             session["spotify_email"] = user_info.get("email")
             session["spotify_display_name"] = user_info.get("display_name")
             session["spotify_id"] = user_info.get("id")
-            session["spotify_token"] = token['access_token']
-            session["spotify_refresh_token"] = token['refresh_token']
+            session["spotify_token"] = token["access_token"]
+            session["spotify_refresh_token"] = token["refresh_token"]
 
             user = User.query.filter_by(id=session["user_id"]).first()
             if user:
-                user.spotify_access_token = token['access_token']
-                user.spotify_refresh_token = token['refresh_token']
+                user.spotify_access_token = token["access_token"]
+                user.spotify_refresh_token = token["refresh_token"]
                 db.session.commit()
 
             print("User Info:", user_info)
@@ -475,51 +573,57 @@ def authorize():
         print(f"An error occurred: {e}")
         return "An error occurred during authorization", 401
 
+
 @app.route("/v1/search_artist", methods=["POST"])
 def search_artist():
     data = request.get_json()
-    query = data['query']
+    query = data["query"]
 
-    headers = {
-        "Authorization": f"Bearer {session['spotify_token']}"
-    }
-    response = requests.get(f"https://api.spotify.com/v1/search?q={query}&type=artist&limit=12", headers=headers)
+    headers = {"Authorization": f"Bearer {session['spotify_token']}"}
+    response = requests.get(
+        f"https://api.spotify.com/v1/search?q={query}&type=artist&limit=12",
+        headers=headers,
+    )
 
     if response.status_code == 401:  # Token expired
         refreshed = refresh_spotify_token()
         if not refreshed:
             return jsonify({"error": "Token refresh failed"}), 401
         headers["Authorization"] = f"Bearer {session['token']}"
-        response = requests.get(f"https://api.spotify.com/v1/search?q={query}&type=artist&limit=12", headers=headers)
+        response = requests.get(
+            f"https://api.spotify.com/v1/search?q={query}&type=artist&limit=12",
+            headers=headers,
+        )
 
     if response.status_code != 200:
         return jsonify({"error": "Failed to fetch data from Spotify"})
-    
+
     artists = response.json().get("artists", {}).get("items", [])
 
     return jsonify(artists)
 
+
 def refresh_spotify_token():
     data = {
-        'grant_type': 'refresh_token',
-        'refresh_token': session['spotify_refresh_token'],
-        'client_id': app.config['SPOTIFY_CLIENT_ID'],
-        'client_secret': app.config['SPOTIFY_CLIENT_SECRET']
+        "grant_type": "refresh_token",
+        "refresh_token": session["spotify_refresh_token"],
+        "client_id": app.config["SPOTIFY_CLIENT_ID"],
+        "client_secret": app.config["SPOTIFY_CLIENT_SECRET"],
     }
 
-    response = requests.post('https://accounts.spotify.com/api/token', data=data)
+    response = requests.post("https://accounts.spotify.com/api/token", data=data)
 
     if response.status_code != 200:
         print("Error refreshing token")
         return False
 
     token_info = response.json()
-    session['token'] = token_info['access_token']
+    session["token"] = token_info["access_token"]
 
     return True
 
-@app.route("/v1/artists/<int:id>/top_songs")
 
+@app.route("/v1/artists/<int:id>/top_songs")
 @app.route("/v1/logout")
 def logout():
     for key in list(session.keys()):
