@@ -83,7 +83,7 @@ function LineupModal({ show, setShow, currentFestival, lineup, setLineup }) {
         </Modal.Body>
         <Row className="mx-4 my-3 justify-content-center gap-1">
           {hasRSVPed ? <Button variant="outline-primary" disabled>See you soon!</Button> : <Button variant="outline-primary" onClick={handleRSVPClick}>RSVP</Button>}
-          <Button variant="outline-primary">Generate Playlist *coming soon*</Button>
+          <Button variant="outline-primary" disabled>Generate Playlist *coming soon*</Button>
         </Row>
       </Modal>
     </main>
