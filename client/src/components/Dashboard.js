@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Container, Row, Col, Button, Card } from "react-bootstrap";
+import SpotifyLogin from "./SpotifyLogin";
+import AppContext from "../context/AppContext";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 function Dashboard() {
-  const isLoggedIn = sessionStorage.getItem("user_id");
-  
+  const { currentUser } = useContext(AppContext);
+
   return (
     <main>
       <Container>
@@ -14,7 +17,7 @@ function Dashboard() {
           </Col>
         </Row>
 
-        {!isLoggedIn && (
+        {!currentUser && (
           <Row className="mb-3">
             <Col className="text-center">
               <Button variant="light" href="/login">
@@ -28,7 +31,7 @@ function Dashboard() {
         )}
 
         <Row className="mb-3 justify-content-center">
-          <Card style={{width: "25rem"}} className="align-content-center">
+          <Card style={{ width: "25rem" }} className="align-content-center">
             <Col className="text-center">
               <h3>Features</h3>
               <ul>
@@ -36,13 +39,16 @@ function Dashboard() {
                 <li>RSVP to your favorite events.</li>
                 <li>Create and manage your own festivals.</li>
                 <li>
-                  *Coming Soon!* Integrate with Spotify to generate festival
-                  playlists.
+                  Be sure to login with Spotify using the link below to generate
+                  festival lineups!
                 </li>
               </ul>
             </Col>
           </Card>
         </Row>
+        <div className="d-flex justify-content-center align-items-center">
+          {currentUser && <SpotifyLogin />}
+        </div>
       </Container>
     </main>
   );
