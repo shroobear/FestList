@@ -58,3 +58,5 @@ __pycache__
 
 #Environment variables and secret keys
 /server/.env
+
+/server/scratch.py
