@@ -31,6 +31,7 @@ from schemas import (
     SongSchema,
     LineupSchema,
     SongArtistSchema,
+    RSVPSchema,
 )
 
 
@@ -47,6 +48,9 @@ singular_lineup_schema = LineupSchema()
 plural_lineup_schema = LineupSchema(many=True)
 singular_song_artist_schema = SongArtistSchema()
 plural_song_artist_schema = SongArtistSchema(many=True)
+singular_rsvp_schema = RSVPSchema()
+plural_rsvp_schema = RSVPSchema(many=True)
+
 
 # User Routes ------------------------------------------------------------
 
@@ -198,7 +202,10 @@ class Songs(Resource):
         return Routing.get_all(self, Song, plural_song_schema)
 
     def post(self):
-        new_song = Song(name=request.json["name"])
+        new_song = Song(
+            name=request.json["name"],
+            spotify_id=request.json['spotify_id']
+            )
         db.session.add(new_song)
         db.session.commit()
 
@@ -335,11 +342,32 @@ class SongArtistByPair(Resource):
 
         response = make_response(singular_song_artist_schema.dump(new_song_artist), 201)
         return response
+
+# RSVP Routes
+
+class RSVPsById(Resource):
+    def get(self, id):
+        return Routing.get_by_id(self, id, User_Festival, singular_rsvp_schema)
+
+class RSVPs(Resource):
+    def get(self):
+        return Routing.get_all(self, User_Festival, plural_rsvp_schema)
     
+    def post(self):
+        new_rsvp = User_Festival(
+            user_id = request.json['user_id'],
+            festival_id = request.json['festival_id']
+        )
+        db.session.add(new_rsvp)
+        db.session.commit()
+
+        response = make_response(singular_rsvp_schema.dump(new_rsvp), 201)
+        return response
+
 # Other Join Routes ----------------------------------------------------------------
 
 
-class FestivalRSVPs(Resource):
+class UserRSVPs(Resource):
     def get(self, id):
         festival_rsvps = Routing.get_relationship(
             self, id, User_Festival, "festival", "user_id"
@@ -408,9 +436,10 @@ api.add_resource(ArtistsOfSong, "/v1/songs/<int:id>/artists")
 api.add_resource(SongArtists, '/v1/song_artists')
 api.add_resource(SongArtistByPair, "/v1/song_artists/pair/<int:song_id>/<int:artist_id>")
 api.add_resource(SongArtistById, "/v1/song_artists/<int:id>")
-api.add_resource(FestivalRSVPs, "/v1/users/<int:id>/rsvps")
+api.add_resource(UserRSVPs, "/v1/users/<int:id>/rsvps")
 api.add_resource(Attendees, "/v1/festivals/<int:id>/attendees")
-
+api.add_resource(RSVPs, "/v1/rsvps")
+api.add_resource(RSVPsById, "/v1/rsvps/<int:id>")
 
 
 @app.route("/v1/festlist_login", methods=["POST"])
