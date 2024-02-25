@@ -1,9 +1,0 @@
-name: Miscellaneous Issue
-description: For issues that don't fit in the other categories
-title: "[MISC] "
-labels: ["miscellaneous", "needs triage"]
-body:
-  - type: markdown
-    attributes:
-      value: |
-        ## Please describe
