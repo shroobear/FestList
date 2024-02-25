@@ -1,0 +1,59 @@
+name: Bug Report
+description: Create a report to help us improve
+title: "[BUG] "
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Please fill out the following information to help us diagnose the problem
+  - type: input
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what the bug is.
+      placeholder: e.g., The application crashed when I clicked the 'Submit' button.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+  - type: input
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+      placeholder: e.g., The application should display a success message and not crash.
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: Please select the severity of this bug.
+      options:
+        - Low
+        - Medium
+        - High
+        - Critical
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ## Additional context
+        Add any other context about the problem here (e.g., logs, screenshots).
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      placeholder: Add logs, screenshots, or any additional information here.
