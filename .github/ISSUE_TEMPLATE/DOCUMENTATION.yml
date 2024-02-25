@@ -1,0 +1,32 @@
+name: Documentation Update
+description: Propose updates to the documentation
+title: "[DOCS] "
+labels: ["documentation", "needs review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Documentation Update Request
+        Please describe the update or improvement you are proposing for the documentation.
+  - type: textarea
+    id: documentation-section
+    attributes:
+      label: Documentation Section
+      description: Which section of the documentation are you proposing to update?
+      placeholder: e.g., Installation Guide, API Reference
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-change
+    attributes:
+      label: Proposed Change
+      description: Please describe the proposed change in detail.
+      placeholder: Provide a detailed explanation of the changes you propose.
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Provide any additional context for the proposed changes, such as links to relevant issues, discussions, or previous updates.
+      placeholder: Add any other context or screenshots about the feature request here.
