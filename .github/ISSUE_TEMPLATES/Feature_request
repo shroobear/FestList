@@ -1,0 +1,39 @@
+name: Feature Request
+description: Suggest an idea for this project
+title: "[FEATURE] "
+labels: ["enhancement", "needs review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Please fill out the following to suggest a new feature
+  - type: input
+    id: feature-summary
+    attributes:
+      label: Feature Summary
+      description: A concise description of the feature.
+      placeholder: e.g., Add a dark mode option.
+    validations:
+      required: true
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Detailed Description
+      description: A detailed description of the feature.
+      placeholder: Describe the feature in detail, including how it should work.
+    validations:
+      required: true
+  - type: textarea
+    id: benefit
+    attributes:
+      label: Benefit
+      description: How will this feature benefit the project?
+      placeholder: Explain how this feature will improve the project.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or features?
+      placeholder: If so, describe them here.
